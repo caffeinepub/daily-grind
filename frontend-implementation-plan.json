@@ -1,0 +1,188 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Daily Grind — Frontend Workout Tracker Implementation",
+  "requirements": [
+    {
+      "id": "REQ-4",
+      "summary": "Build 'Today's Workout' screen with auto-matched day-of-week workout display and completion toggle",
+      "acceptanceCriteria": [
+        "The screen shows the workout matching today's day of the week",
+        "Workout name, details, and time are displayed",
+        "Tapping 'Mark as Completed' updates the entry and reflects the change in the UI",
+        "A placeholder is shown when no workout exists for today"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useWorkoutSchedules.ts",
+          "operation": "create",
+          "description": "Create a React Query hook to fetch all workout schedules via getWorkoutSchedules() backend method. Return the query state including data, isLoading, and error."
+        },
+        {
+          "path": "frontend/src/hooks/useMarkWorkoutComplete.ts",
+          "operation": "create",
+          "description": "Create a React Query mutation hook to call markWorkoutComplete(id, completed) backend method. Invalidate 'workoutSchedules' query key on success to refresh the UI."
+        },
+        {
+          "path": "frontend/src/pages/TodaysWorkout.tsx",
+          "operation": "create",
+          "description": "Create the Today's Workout page component. Use JavaScript Date to get the current day of week (toLowerCase() to match backend DayOfWeek enum). Filter workout schedules to find the entry matching today. Display workout name, workout details, and time reminder. Show a 'Mark as Completed ✅' button that calls the useMarkWorkoutComplete mutation. If no workout exists for today, display a friendly placeholder message. Use the authorization component to ensure user is authenticated before accessing data."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Import TodaysWorkout page and register route '/today' in the router. Update navigation to include a link to the Today's Workout screen."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Build 'Schedule' screen with editable 7-day workout list",
+      "acceptanceCriteria": [
+        "All 7 days are listed on the Schedule screen",
+        "Each day's workout can be edited and saved",
+        "Saved changes are reflected immediately in the UI and persisted to the backend"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useCreateOrUpdateWorkoutSchedule.ts",
+          "operation": "create",
+          "description": "Create a React Query mutation hook to call createOrUpdateWorkoutSchedule(id, schedule) backend method. Invalidate 'workoutSchedules' query key on success. Accept both id and WorkoutScheduleEntry parameters."
+        },
+        {
+          "path": "frontend/src/pages/Schedule.tsx",
+          "operation": "create",
+          "description": "Create the Schedule page component. Display all 7 days of the week (Monday through Sunday) in order. For each day, show the existing workout if one exists, or provide a form to create one. Include inline editing or a detail/edit modal for workout name, workout details, and time reminder. Use useWorkoutSchedules hook to fetch data and useCreateOrUpdateWorkoutSchedule to persist changes. Ensure user is authenticated via authorization component."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Import Schedule page and register route '/schedule' in the router. Add navigation link to the Schedule screen."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Build 'Progress' screen showing weekly completion stats, streak, and visual progress indicator",
+      "acceptanceCriteria": [
+        "Completed workout count for the current week is displayed",
+        "A streak count (consecutive completed days) is shown",
+        "A progress bar or visual indicator reflects weekly completion percentage"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/progressCalculations.ts",
+          "operation": "create",
+          "description": "Create utility functions to calculate weekly completion stats: countCompletedThisWeek (filters workouts by completed=true in current week), calculateStreak (counts consecutive days with completed workouts), and calculateWeeklyProgress (returns percentage of 7 days completed this week). Accept array of WorkoutScheduleEntry as input."
+        },
+        {
+          "path": "frontend/src/pages/Progress.tsx",
+          "operation": "create",
+          "description": "Create the Progress page component. Use useWorkoutSchedules hook to fetch workout data. Apply progressCalculations utility functions to compute: total workouts completed this week, weekly completion streak, and completion percentage. Display these metrics prominently. Include a visual progress bar (using shadcn/ui Progress component if available, or custom styled div) showing weekly completion. Ensure user is authenticated."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Import Progress page and register route '/progress' in the router. Add navigation link to the Progress screen."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Display random motivational message on Today's Workout screen or home banner",
+      "acceptanceCriteria": [
+        "A motivational message is displayed on load",
+        "The message is sourced from the backend motivational messages pool"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useRandomMotivationalMessage.ts",
+          "operation": "create",
+          "description": "Create a React Query hook to fetch a random motivational message via getRandomMotivationalMessage() backend method. Return the query state including data (message text), isLoading, and error."
+        },
+        {
+          "path": "frontend/src/pages/TodaysWorkout.tsx",
+          "operation": "modify",
+          "description": "Import and use useRandomMotivationalMessage hook. Display the motivational message prominently as a banner or card at the top of the Today's Workout screen. Style it with bold typography and accent colors to match the dark fitness aesthetic."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Integrate Internet Identity authentication and gate all workout data behind login",
+      "acceptanceCriteria": [
+        "Unauthenticated users see a login screen",
+        "After authenticating via Internet Identity, the user's personal data loads",
+        "Logout clears the session and returns to the login screen"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useGetCallerUserProfile.ts",
+          "operation": "create",
+          "description": "Create a React Query hook to fetch the caller's user profile via getCallerUserProfile() backend method. Follow the authorization component usage instructions for preventing profile setup modal flash: return custom state with isLoading that accounts for actor fetching state, and isFetched that confirms actor availability."
+        },
+        {
+          "path": "frontend/src/hooks/useSaveCallerUserProfile.ts",
+          "operation": "create",
+          "description": "Create a React Query mutation hook to call saveCallerUserProfile(profile) backend method. Invalidate 'currentUserProfile' query key on success. Accept UserProfile object with displayName and notificationsEnabled fields."
+        },
+        {
+          "path": "frontend/src/components/LoginButton.tsx",
+          "operation": "create",
+          "description": "Create a LoginButton component following the authorization component usage instructions. Use useInternetIdentity hook to access login, clear, loginStatus, and identity. Use useQueryClient to clear all cached data on logout. Handle login errors gracefully, including the 'User is already authenticated' case. Display appropriate button text based on authentication state (Login/Logging in.../Logout)."
+        },
+        {
+          "path": "frontend/src/components/ProfileSetupModal.tsx",
+          "operation": "create",
+          "description": "Create a ProfileSetupModal component that prompts first-time users to enter their display name. Use useSaveCallerUserProfile mutation to save the profile. Include a form with a text input for displayName and a checkbox for notificationsEnabled. Show modal only when user is authenticated, profile is fetched, and profile is null (following authorization component pattern to prevent flash)."
+        },
+        {
+          "path": "frontend/src/components/AuthGuard.tsx",
+          "operation": "create",
+          "description": "Create an AuthGuard wrapper component that checks authentication status via useInternetIdentity. If not authenticated, display a login screen with LoginButton. If authenticated but no profile exists (checked via useGetCallerUserProfile), show ProfileSetupModal. Only render children when authenticated and profile exists. Use the authorization component's pattern for checking authentication state."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Import and wrap all workout-related routes with AuthGuard component. Place LoginButton in the app header/navigation. Ensure unauthenticated users cannot access Today's Workout, Schedule, or Progress screens without logging in first."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Apply dark, high-energy fitness aesthetic with bold accents and clean card-based layout",
+      "acceptanceCriteria": [
+        "All screens use a consistent dark fitness theme",
+        "Accent colors are applied to CTAs, progress indicators, and highlights",
+        "Typography is bold and legible against dark backgrounds"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Update global styles to implement dark fitness aesthetic. Set body background to dark charcoal (#0F0F0F or similar). Define CSS custom properties for primary accent color (fiery orange #FF6B35 or electric green #39FF14), secondary colors, and text colors. Ensure high contrast for readability. Apply bold font weights to headings and CTAs."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Extend Tailwind theme to include custom dark fitness color palette. Define primary (orange/green accent), background (dark charcoal), card (slightly lighter dark), and text colors (white/light gray). Configure font families to use strong, athletic typefaces if available. Add utility classes for card-based layouts with subtle borders or shadows."
+        },
+        {
+          "path": "frontend/src/components/AppLayout.tsx",
+          "operation": "create",
+          "description": "Create an AppLayout component that wraps all pages with consistent dark fitness styling. Include a header with app title, navigation links (Today, Schedule, Progress), and LoginButton. Apply dark background, bold typography, and accent color highlights. Use card-based content containers with rounded corners and subtle elevation."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Import and wrap all page routes with AppLayout component to ensure consistent dark fitness theme across all screens."
+        },
+        {
+          "path": "frontend/public/assets/generated/app-logo.dim_256x256.png",
+          "operation": "create",
+          "description": "Wire the generated flame icon (frontend/public/assets/generated/app-logo.dim_256x256.png) into AppLayout component header or favicon. Reference the exact workspace path in the img src attribute. Use this logo to reinforce the app's fiery, motivational brand identity."
+        }
+      ]
+    }
+  ]
+}

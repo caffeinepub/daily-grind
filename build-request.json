@@ -1,0 +1,201 @@
+{
+  "kind": "build_request",
+  "title": "Daily Grind — Full-Stack Workout Tracker App",
+  "projectName": "Daily Grind",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Create a backend data model and API for workout schedules. Each schedule entry should include: day of week (Monday–Sunday), workout name, workout details, time reminder, completed status, and owner identity. Support create, read, update, and delete operations, with data scoped per authenticated user.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Table 1: Workout Schedule",
+          "Day, Workout Name, Workout Details, Time Reminder, Completed?, User Email"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend stores workout schedule entries with all required fields",
+        "CRUD operations exist for workout entries",
+        "Data is scoped to the authenticated caller's principal"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Create a backend data model and API for motivational messages. Seed at least 5 default messages. Support fetching a random motivational message.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Table 2: Motivation Messages",
+          "No excuses today. Get after it.",
+          "Discipline > Motivation.",
+          "Future you is watching.",
+          "One workout closer to elite.",
+          "Stay locked in."
+        ]
+      },
+      "acceptanceCriteria": [
+        "At least 5 motivational messages are stored",
+        "A query function returns a random message"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Create a backend API for user profiles. Each profile stores a display name and whether push notifications are enabled, keyed by the caller's principal. Support get and upsert operations.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Table 3: User",
+          "Name, Push Notifications"
+        ]
+      },
+      "acceptanceCriteria": [
+        "User profile can be created or updated",
+        "Profile is retrievable by the authenticated caller"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Build a 'Today's Workout' screen that auto-matches the current day of the week (derived from the client's local date) to the user's workout schedule entry for that day. Display the workout name, workout details, and time reminder. Include a 'Mark as Completed ✅' button that updates the completed status for that entry. If no workout is scheduled for today, show a friendly placeholder message.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Screen 1: Today's Workout",
+          "Mark as Completed",
+          "Set Column → Completed? → True"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The screen shows the workout matching today's day of the week",
+        "Workout name, details, and time are displayed",
+        "Tapping 'Mark as Completed' updates the entry and reflects the change in the UI",
+        "A placeholder is shown when no workout exists for today"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Build a 'Schedule' screen that lists all 7 days of the week with their assigned workouts. Allow the user to edit each day's workout name, workout details, and time reminder inline or via a detail/edit form. Changes should persist to the backend.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Allow Custom Workout Editing",
+          "Change Workout Name, Change Workout Details, Change Time Reminder",
+          "Filter: User Email = Signed-in user"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All 7 days are listed on the Schedule screen",
+        "Each day's workout can be edited and saved",
+        "Saved changes are reflected immediately in the UI and persisted to the backend"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Build a 'Progress' screen that shows: total workouts completed this week, a weekly completion streak (consecutive days with completed workouts), and a visual progress bar or indicator showing how many of the 7 days this week have been completed.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Progress bar (count Completed workouts this week)",
+          "Streak counter"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Completed workout count for the current week is displayed",
+        "A streak count (consecutive completed days) is shown",
+        "A progress bar or visual indicator reflects weekly completion percentage"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Display a random motivational message fetched from the backend prominently on the Today's Workout screen or as a dedicated banner/card visible from the home view.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Use random row from Motivation Messages",
+          "Stay Locked In 🔥"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A motivational message is displayed on load",
+        "The message is sourced from the backend motivational messages pool"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Integrate Internet Identity authentication. Gate all workout data and profile features behind login. Show a login prompt to unauthenticated users. After login, load the user's personal workout schedule.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2",
+          "msg-3"
+        ],
+        "quotes": [
+          "User authentication (email sign-in) with user-specific workout data",
+          "Settings → Privacy → Enable Sign-in"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Unauthenticated users see a login screen",
+        "After authenticating via Internet Identity, the user's personal data loads",
+        "Logout clears the session and returns to the login screen"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Apply a dark, high-energy fitness aesthetic throughout the app. Use a dark charcoal or near-black background with bold accent colors (e.g., fiery orange or electric green), strong typography, and a clean card-based layout. The visual theme should feel motivational and athletic. Apply it consistently across all screens.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Dark theme fitness aesthetic",
+          "App icon with flame logo"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All screens use a consistent dark fitness theme",
+        "Accent colors are applied to CTAs, progress indicators, and highlights",
+        "Typography is bold and legible against dark backgrounds"
+      ]
+    }
+  ],
+  "constraints": [
+    "All workout data must be scoped per authenticated user principal — no cross-user data leakage",
+    "Do not edit any files under frontend/src/hooks/ or frontend/src/components/ui"
+  ],
+  "nonGoals": [
+    "Push notifications (not supported on this platform)",
+    "AI workout generation",
+    "Weight tracking",
+    "Payment or premium upgrade flows",
+    "Glide integration"
+  ],
+  "imageRequirements": {
+    "required": [
+      "Stylized flame icon on a dark background, bold and minimal fitness app logo style (app-logo.dim_256x256.png)"
+    ],
+    "edits": []
+  }
+}

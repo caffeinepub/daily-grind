@@ -1,0 +1,14 @@
+{
+  "frontend/src/App.tsx": "Main app entry with TanStack Router setup, four routes (/, /today, /schedule, /progress), ThemeProvider for dark mode, AppLayout wrapper, and AuthGuard protecting all workout pages.",
+  "frontend/src/hooks/useQueries.ts": "All React Query hooks for the backend — workout schedule CRUD, mark complete, random motivational message, user profile get/save — with proper query invalidation.",
+  "frontend/src/components/AppLayout.tsx": "Full app shell with sticky header (logo + nav links + login button), mobile bottom nav bar, main content area, and branded footer with caffeine.ai attribution.",
+  "frontend/src/components/LoginButton.tsx": "Authentication button using useInternetIdentity — shows Login/Logging in.../Logout states, clears React Query cache on logout, handles already-authenticated edge case.",
+  "frontend/src/components/ProfileSetupModal.tsx": "First-time user profile setup modal with display name input and notifications toggle, uses useSaveCallerUserProfile mutation, blocks interaction until saved.",
+  "frontend/src/components/AuthGuard.tsx": "Authentication gate component — shows LoginScreen for unauthenticated users, ProfileSetupModal for users without a profile, loading spinner during initialization.",
+  "frontend/src/components/LoginScreen.tsx": "Full-page login landing with app logo, feature highlights list, and LoginButton CTA for unauthenticated users.",
+  "frontend/src/pages/TodaysWorkout.tsx": "Today's workout page — auto-matches current day of week to user's schedule, shows motivational banner with refresh, mark-as-completed toggle, and 7-day mini week overview.",
+  "frontend/src/pages/Schedule.tsx": "Weekly schedule page — lists all 7 days with inline edit/add/delete forms per day, shows today highlight, completion badges, and persists changes to backend.",
+  "frontend/src/pages/Progress.tsx": "Progress tracking page showing completed count, streak, completion rate, and scheduled stats in a grid, a weekly progress bar (using `ProgressBar` alias to avoid name conflict with the page component), and a day-by-day breakdown with perfect week celebration.",
+  "frontend/src/index.css": "Dark fitness aesthetic with OKLCH color system — fiery orange primary, dark charcoal background, Inter font, success/glow utility classes, and both light/dark mode tokens.",
+  "frontend/tailwind.config.js": "Extended Tailwind config with Inter/Barlow Condensed fonts, success color token, glow box shadows, fitness-themed color palette, and enhanced border radius scale."
+}

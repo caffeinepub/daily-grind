@@ -1,0 +1,128 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-build-a-today-s-workout-screen-that-auto-matches-the-current-day-of-the-week-derived-from-the-client-s-local-date-to-the-user-s-workout-schedule-entry-for-that-day-display-the-workout-name-workout-details-and-time-reminder-include-a-mark-as-completed-button-that-updates-the-completed-status-for-that-entry-if-no-workout-is-scheduled-for-today-show-a-friendly-placeholder-message",
+      "featureTitle": "Build a 'Today's Workout' screen that auto-matches the current day of the week (derived from the client's local date) to the user's workout schedule entry for that day. Display the workout name, workout details, and time reminder. Include a 'Mark as Completed ✅' button that updates the completed status for that entry. If no workout is scheduled for today, show a friendly placeholder message.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/TodaysWorkout.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-a-schedule-screen-that-lists-all-7-days-of-the-week-with-their-assigned-workouts-allow-the-user-to-edit-each-day-s-workout-name-workout-details-and-time-reminder-inline-or-via-a-detail-edit-form-changes-should-persist-to-the-backend",
+      "featureTitle": "Build a 'Schedule' screen that lists all 7 days of the week with their assigned workouts. Allow the user to edit each day's workout name, workout details, and time reminder inline or via a detail/edit form. Changes should persist to the backend.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/Schedule.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-a-progress-screen-that-shows-total-workouts-completed-this-week-a-weekly-completion-streak-consecutive-days-with-completed-workouts-and-a-visual-progress-bar-or-indicator-showing-how-many-of-the-7-days-this-week-have-been-completed",
+      "featureTitle": "Build a 'Progress' screen that shows: total workouts completed this week, a weekly completion streak (consecutive days with completed workouts), and a visual progress bar or indicator showing how many of the 7 days this week have been completed.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/Progress.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-display-a-random-motivational-message-fetched-from-the-backend-prominently-on-the-today-s-workout-screen-or-as-a-dedicated-banner-card-visible-from-the-home-view",
+      "featureTitle": "Display a random motivational message fetched from the backend prominently on the Today's Workout screen or as a dedicated banner/card visible from the home view.",
+      "files": [
+        "frontend/src/pages/TodaysWorkout.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-integrate-internet-identity-authentication-gate-all-workout-data-and-profile-features-behind-login-show-a-login-prompt-to-unauthenticated-users-after-login-load-the-user-s-personal-workout-schedule",
+      "featureTitle": "Integrate Internet Identity authentication. Gate all workout data and profile features behind login. Show a login prompt to unauthenticated users. After login, load the user's personal workout schedule.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AuthGuard.tsx",
+        "frontend/src/components/LoginButton.tsx",
+        "frontend/src/components/ProfileSetupModal.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-apply-a-dark-high-energy-fitness-aesthetic-throughout-the-app-use-a-dark-charcoal-or-near-black-background-with-bold-accent-colors-e-g-fiery-orange-or-electric-green-strong-typography-and-a-clean-card-based-layout-the-visual-theme-should-feel-motivational-and-athletic-apply-it-consistently-across-all-screens",
+      "featureTitle": "Apply a dark, high-energy fitness aesthetic throughout the app. Use a dark charcoal or near-black background with bold accent colors (e.g., fiery orange or electric green), strong typography, and a clean card-based layout. The visual theme should feel motivational and athletic. Apply it consistently across all screens.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AppLayout.tsx",
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
