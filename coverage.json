@@ -1,68 +1,34 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T02:58:05.129Z",
+  "generatedAt": "2026-02-25T05:35:06.406Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 1,
+    "implemented": 1,
     "items": [
       {
-        "id": "REQ-15",
-        "summary": "Implement browser-based Web Push notifications on the frontend. When a logged-in user grants notification permission, schedule a repeating local notification (via the Notifications API and a Service Worker with a periodic alarm or setTimeout-based scheduler) that fires every 6 hours while the browser/PWA is running or backgrounded. Each notification should include a reminder message to complete their daily workout and a motivational quote fetched from the backend's existing random motivational message endpoint.",
+        "id": "REQ-17",
+        "summary": "In `frontend/public/sw.js`, change the repeating notification interval from every 6 hours (6 * 60 * 60 * 1000 ms) to every 4 hours (4 * 60 * 60 * 1000 ms). Update the setInterval call and any related comments or constants that reference the 6-hour schedule.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/public/sw.js",
-          "frontend/src/utils/notificationService.ts",
-          "frontend/src/hooks/useNotifications.ts",
-          "frontend/src/App.tsx",
-          "frontend/index.html",
-          "frontend/public/manifest.json"
+          "frontend/public/sw.js"
         ],
         "matchedFiles": [
-          "frontend/public/sw.js",
-          "frontend/src/utils/notificationService.ts",
-          "frontend/src/hooks/useNotifications.ts",
-          "frontend/src/App.tsx",
-          "frontend/index.html",
-          "frontend/public/manifest.json"
-        ]
-      },
-      {
-        "id": "REQ-16",
-        "summary": "Add a notification opt-in/opt-out toggle in the Settings screen. When the user enables notifications, request browser notification permission and start the 6-hour reminder schedule. When disabled, cancel any scheduled notifications. Persist the user's notification preference using the existing `notificationsEnabled` field in the UserProfile backend.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Settings.tsx",
-          "frontend/src/hooks/useNotifications.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Settings.tsx",
-          "frontend/src/hooks/useNotifications.ts"
+          "frontend/public/sw.js"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/index.html",
-    "frontend/public/manifest.json",
     "frontend/public/sw.js",
-    "frontend/src/App.tsx",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useNotifications.ts",
-    "frontend/src/pages/Settings.tsx",
-    "frontend/src/utils/notificationService.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

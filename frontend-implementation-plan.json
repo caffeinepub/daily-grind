@@ -1,72 +1,21 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add periodic push notifications every 6 hours with motivational quotes",
+  "title": "Change notification reminder interval from 6 hours to 4 hours",
   "requirements": [
     {
-      "id": "REQ-15",
-      "summary": "Implement browser-based Web Push notifications on the frontend with 6-hour periodic reminders containing motivational quotes",
+      "id": "REQ-17",
+      "summary": "Update the service worker notification interval from 6 hours to 4 hours",
       "acceptanceCriteria": [
-        "A Service Worker is registered in the frontend that can display push/local notifications.",
-        "On first login (or from a visible permission prompt in the app), the user is asked to grant notification permission.",
-        "If permission is granted, a notification fires every 6 hours (using a setInterval or service worker periodic scheduler) with a title such as 'Time to grind! 💪' and a body containing a motivational quote.",
-        "If permission is denied or not yet granted, the app continues to function normally without errors.",
-        "Notifications appear even when the user is not actively viewing the app (browser is backgrounded or tab is closed but service worker is active).",
-        "Tapping/clicking the notification opens or focuses the app."
+        "The service worker `sw.js` uses a 4-hour interval (14,400,000 ms) for the repeating notification schedule instead of 6 hours.",
+        "No references to the old 6-hour interval remain in `sw.js`.",
+        "The notification still fires correctly when started, sending a reminder with a motivational quote."
       ],
       "file_operations": [
         {
           "path": "frontend/public/sw.js",
-          "operation": "create",
-          "description": "Create a Service Worker that handles notification display, periodic alarm scheduling (6-hour intervals), and notification click events. The worker should listen for messages from the main app to start/stop the notification schedule, fetch motivational quotes from the backend's getRandomMotivationalMessage endpoint, and display notifications with title 'Time to grind! 💪' and the quote as body text. On notification click, focus or open the app window."
-        },
-        {
-          "path": "frontend/src/utils/notificationService.ts",
-          "operation": "create",
-          "description": "Create a notification service module that registers the service worker, requests notification permission from the browser, starts/stops the 6-hour notification schedule by messaging the service worker, and provides utility functions to check permission status. Export functions: registerServiceWorker(), requestNotificationPermission(), startNotificationSchedule(), stopNotificationSchedule(), getNotificationPermission()."
-        },
-        {
-          "path": "frontend/src/hooks/useNotifications.ts",
-          "operation": "create",
-          "description": "Create a custom React hook that wraps the notification service, manages notification permission state, handles service worker registration on mount, provides callbacks to enable/disable notifications, and syncs with the user's notificationsEnabled backend preference. The hook should return: { permission, isEnabled, enableNotifications, disableNotifications, isLoading }."
-        },
-        {
-          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Import and invoke the service worker registration from notificationService.ts in a useEffect hook when the app mounts, ensuring the service worker is registered early in the app lifecycle for all authenticated users."
-        },
-        {
-          "path": "frontend/index.html",
-          "operation": "modify",
-          "description": "Add a manifest link tag pointing to a web app manifest (frontend/public/manifest.json) to enable PWA capabilities and improve notification behavior when the app is installed or running in the background."
-        },
-        {
-          "path": "frontend/public/manifest.json",
-          "operation": "create",
-          "description": "Create a minimal web app manifest defining the app name 'Daily Grind', start_url, display mode 'standalone', theme color, background color, and icon reference to the generated app logo at frontend/public/assets/generated/app-logo.dim_256x256.png. This enables PWA installation and improves background notification delivery."
-        }
-      ]
-    },
-    {
-      "id": "REQ-16",
-      "summary": "Add notification opt-in/opt-out toggle in Settings screen with persistence to backend UserProfile.notificationsEnabled",
-      "acceptanceCriteria": [
-        "The Settings screen displays a toggle labeled 'Workout Reminders' or similar that reflects the current notification opt-in state.",
-        "Toggling on requests browser notification permission if not already granted; if permission is denied by the browser, the toggle reverts and shows an explanatory message.",
-        "Toggling off cancels/clears any pending scheduled notifications.",
-        "The preference is saved to the backend via the existing user profile upsert function so it persists across sessions.",
-        "On app load, if the stored preference is enabled and permission is already granted, the notification schedule resumes automatically."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Settings.tsx",
-          "operation": "modify",
-          "description": "Add a 'Workout Reminders' toggle section to the Settings page using a shadcn/ui Switch component. Wire the toggle to the useNotifications hook's enableNotifications/disableNotifications callbacks. Display the current notification permission status and show an error message if the user denies browser permission. When toggling on, request permission and start the 6-hour schedule; when toggling off, stop the schedule. Save the preference to the backend using the saveCallerUserProfile mutation from useQueries.ts, preserving all other UserProfile fields including currentTier and lastEvaluatedWeek. Show loading state during mutation."
-        },
-        {
-          "path": "frontend/src/hooks/useNotifications.ts",
-          "operation": "modify",
-          "description": "Enhance the useNotifications hook to fetch the user's notificationsEnabled preference from the backend on mount using the getCallerUserProfile query. If the preference is true and browser permission is already granted, automatically resume the 6-hour notification schedule. Ensure enableNotifications and disableNotifications callbacks update both the local state and the backend UserProfile.notificationsEnabled field via saveCallerUserProfile mutation."
+          "description": "Change the repeating notification interval from 6 hours (6 * 60 * 60 * 1000 = 21,600,000 ms) to 4 hours (4 * 60 * 60 * 1000 = 14,400,000 ms). Update the setInterval call to use 14,400,000 ms and revise any related comments or constants that reference the 6-hour schedule to reflect the new 4-hour interval."
         }
       ]
     }

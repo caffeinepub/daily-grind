@@ -1,5 +1,5 @@
 // Service Worker for Daily Grind workout notifications
-const NOTIFICATION_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const NOTIFICATION_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
 const ALARM_TAG = 'workout-reminder';
 
 const MOTIVATIONAL_QUOTES = [
@@ -48,7 +48,7 @@ function startSchedule() {
   if (notificationTimerId !== null) {
     clearInterval(notificationTimerId);
   }
-  // Show first notification after 6 hours, then every 6 hours
+  // Show first notification after 4 hours, then every 4 hours
   notificationTimerId = setInterval(() => {
     showWorkoutNotification();
   }, NOTIFICATION_INTERVAL_MS);

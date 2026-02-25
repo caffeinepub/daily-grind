@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 7,
+  "projectStateVersion": 9,
   "summary": "Building 'Daily Grind' — a daily workout reminder app with weekly workout schedule, today's workout view, mark-as-completed, motivational messages, progress tracking, and user authentication.",
   "architectural_notes": [
     "Three data tables: Workout Schedule, Motivation Messages, User",
@@ -97,6 +97,14 @@
         "REQ-16"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-in-frontend-public-sw-js-change-the-repeating-notification-interval-from-every-6-hours-6-60-60-1000-ms-to-every-4-hours-4-60-60-1000-ms-update-the-setinterval-call-and-any-related-comments-or-constants-that-reference-the-6-hour-schedule",
+      "title": "In `frontend/public/sw.js`, change the repeating notification interval from every 6 hours (6 * 60 * 60 * 1000 ms) to every 4 hours (4 * 60 * 60 * 1000 ms). Update the setInterval call and any related comments or constants that reference the 6-hour schedule.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -191,6 +199,12 @@
     {
       "id": "AR-14",
       "summary": "Push notifications every 6 hours for users not actively in the app, reminding them to complete their daily workout along with a motivational quote",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Change notification reminder interval from every 6 hours to every 4 hours",
       "reqIds": [],
       "status": "pending"
     }

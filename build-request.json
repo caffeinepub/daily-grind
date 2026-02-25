@@ -1,62 +1,36 @@
 {
   "kind": "build_request",
-  "title": "Add periodic push notifications every 6 hours with motivational quotes",
+  "title": "Change notification reminder interval from 6 hours to 4 hours",
   "projectName": "Daily Grind",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-15",
-      "text": "Implement browser-based Web Push notifications on the frontend. When a logged-in user grants notification permission, schedule a repeating local notification (via the Notifications API and a Service Worker with a periodic alarm or setTimeout-based scheduler) that fires every 6 hours while the browser/PWA is running or backgrounded. Each notification should include a reminder message to complete their daily workout and a motivational quote fetched from the backend's existing random motivational message endpoint.",
+      "id": "REQ-17",
+      "text": "In `frontend/public/sw.js`, change the repeating notification interval from every 6 hours (6 * 60 * 60 * 1000 ms) to every 4 hours (4 * 60 * 60 * 1000 ms). Update the setInterval call and any related comments or constants that reference the 6-hour schedule.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent-user-notification"
+          "msg-6"
         ],
         "quotes": [
-          "get notifications every 6 hours to complete their daily workout along with a motivational quote"
+          "can you change the remind notification setting from every 6 hours to every 4 hours"
         ]
       },
       "acceptanceCriteria": [
-        "A Service Worker is registered in the frontend that can display push/local notifications.",
-        "On first login (or from a visible permission prompt in the app), the user is asked to grant notification permission.",
-        "If permission is granted, a notification fires every 6 hours (using a setInterval or service worker periodic scheduler) with a title such as 'Time to grind! 💪' and a body containing a motivational quote.",
-        "If permission is denied or not yet granted, the app continues to function normally without errors.",
-        "Notifications appear even when the user is not actively viewing the app (browser is backgrounded or tab is closed but service worker is active).",
-        "Tapping/clicking the notification opens or focuses the app."
-      ]
-    },
-    {
-      "id": "REQ-16",
-      "text": "Add a notification opt-in/opt-out toggle in the Settings screen. When the user enables notifications, request browser notification permission and start the 6-hour reminder schedule. When disabled, cancel any scheduled notifications. Persist the user's notification preference using the existing `notificationsEnabled` field in the UserProfile backend.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-recent-user-notification"
-        ],
-        "quotes": [
-          "people who use the app but are not directly on it in the moment can get notifications every 6 hours"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The Settings screen displays a toggle labeled 'Workout Reminders' or similar that reflects the current notification opt-in state.",
-        "Toggling on requests browser notification permission if not already granted; if permission is denied by the browser, the toggle reverts and shows an explanatory message.",
-        "Toggling off cancels/clears any pending scheduled notifications.",
-        "The preference is saved to the backend via the existing user profile upsert function so it persists across sessions.",
-        "On app load, if the stored preference is enabled and permission is already granted, the notification schedule resumes automatically."
+        "The service worker `sw.js` uses a 4-hour interval (14,400,000 ms) for the repeating notification schedule instead of 6 hours.",
+        "No references to the old 6-hour interval remain in `sw.js`.",
+        "The notification still fires correctly when started, sending a reminder with a motivational quote."
       ]
     }
   ],
   "constraints": [
-    "Do not use any third-party push notification service (e.g., Firebase FCM, OneSignal). Use only the browser Notifications API and Service Worker.",
-    "Do not modify immutable frontend paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
-    "Backend logic must remain in the single main actor (backend/main.mo). Use the existing notificationsEnabled field in UserProfile — do not add a new field if one already exists."
+    "Only change the notification interval value — do not alter notification content, service worker message handling, or any other logic.",
+    "Do not modify any immutable frontend paths."
   ],
   "nonGoals": [
-    "Native iOS/Android push notifications via APNs or FCM.",
-    "Server-side push message delivery (no backend push infrastructure).",
-    "SMS or email notification delivery.",
-    "Real-time WebSocket-based notifications.",
-    "Changing the 6-hour interval to be user-configurable in this iteration."
+    "Allowing users to customize their own notification interval.",
+    "Changing any backend logic or data models.",
+    "Modifying the Settings UI or notification toggle behavior."
   ],
   "imageRequirements": {
     "required": [],

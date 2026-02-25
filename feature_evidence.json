@@ -2,15 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-implement-browser-based-web-push-notifications-on-the-frontend-when-a-logged-in-user-grants-notification-permission-schedule-a-repeating-local-notification-via-the-notifications-api-and-a-service-worker-with-a-periodic-alarm-or-settimeout-based-scheduler-that-fires-every-6-hours-while-the-browser-pwa-is-running-or-backgrounded-each-notification-should-include-a-reminder-message-to-complete-their-daily-workout-and-a-motivational-quote-fetched-from-the-backend-s-existing-random-motivational-message-endpoint",
-      "featureTitle": "Implement browser-based Web Push notifications on the frontend. When a logged-in user grants notification permission, schedule a repeating local notification (via the Notifications API and a Service Worker with a periodic alarm or setTimeout-based scheduler) that fires every 6 hours while the browser/PWA is running or backgrounded. Each notification should include a reminder message to complete their daily workout and a motivational quote fetched from the backend's existing random motivational message endpoint.",
+      "featureId": "feature-in-frontend-public-sw-js-change-the-repeating-notification-interval-from-every-6-hours-6-60-60-1000-ms-to-every-4-hours-4-60-60-1000-ms-update-the-setinterval-call-and-any-related-comments-or-constants-that-reference-the-6-hour-schedule",
+      "featureTitle": "In `frontend/public/sw.js`, change the repeating notification interval from every 6 hours (6 * 60 * 60 * 1000 ms) to every 4 hours (4 * 60 * 60 * 1000 ms). Update the setInterval call and any related comments or constants that reference the 6-hour schedule.",
       "files": [
-        "frontend/index.html",
-        "frontend/public/manifest.json",
-        "frontend/public/sw.js",
-        "frontend/src/App.tsx",
-        "frontend/src/hooks/useNotifications.ts",
-        "frontend/src/utils/notificationService.ts"
+        "frontend/public/sw.js"
       ],
       "components": [
         "authorization@4.0.0",
@@ -21,27 +16,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-15"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-a-notification-opt-in-opt-out-toggle-in-the-settings-screen-when-the-user-enables-notifications-request-browser-notification-permission-and-start-the-6-hour-reminder-schedule-when-disabled-cancel-any-scheduled-notifications-persist-the-user-s-notification-preference-using-the-existing-notificationsenabled-field-in-the-userprofile-backend",
-      "featureTitle": "Add a notification opt-in/opt-out toggle in the Settings screen. When the user enables notifications, request browser notification permission and start the 6-hour reminder schedule. When disabled, cancel any scheduled notifications. Persist the user's notification preference using the existing `notificationsEnabled` field in the UserProfile backend.",
-      "files": [
-        "frontend/src/hooks/useNotifications.ts",
-        "frontend/src/pages/Settings.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-16"
+        "REQ-17"
       ],
       "confidence": "high"
     }
