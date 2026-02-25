@@ -30,13 +30,25 @@ export const WorkoutScheduleEntry = IDL.Record({
   'timeReminder' : IDL.Opt(IDL.Text),
   'workoutName' : IDL.Text,
 });
+export const Tier = IDL.Record({ 'name' : IDL.Text, 'index' : IDL.Nat });
+export const TierProgressionResult = IDL.Record({
+  'direction' : IDL.Variant({
+    'up' : IDL.Null,
+    'down' : IDL.Null,
+    'same' : IDL.Null,
+  }),
+  'previousTier' : Tier,
+  'newTier' : Tier,
+});
 export const MotivationalMessage = IDL.Record({
   'id' : IDL.Nat,
   'message' : IDL.Text,
 });
 export const UserProfile = IDL.Record({
+  'lastEvaluatedWeek' : IDL.Nat,
   'notificationsEnabled' : IDL.Bool,
   'displayName' : IDL.Text,
+  'currentTier' : IDL.Nat,
 });
 
 export const idlService = IDL.Service({
@@ -49,6 +61,12 @@ export const idlService = IDL.Service({
       [],
     ),
   'deleteWorkoutSchedule' : IDL.Func([IDL.Text], [], []),
+  'evaluateAndAdvanceTier' : IDL.Func([IDL.Nat], [TierProgressionResult], []),
+  'evaluateUserTierProgression' : IDL.Func(
+      [IDL.Principal, IDL.Nat, IDL.Nat],
+      [TierProgressionResult],
+      [],
+    ),
   'getAllMotivationalMessages' : IDL.Func(
       [],
       [IDL.Vec(MotivationalMessage)],
@@ -71,6 +89,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getUserTier' : IDL.Func([], [Tier], ['query']),
   'getWorkoutSchedules' : IDL.Func(
       [],
       [IDL.Vec(WorkoutScheduleEntry)],
@@ -78,6 +97,7 @@ export const idlService = IDL.Service({
     ),
   'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isNotificationsEnabled' : IDL.Func([], [IDL.Bool], ['query']),
   'markWorkoutComplete' : IDL.Func([IDL.Text, IDL.Bool], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
 });
@@ -107,13 +127,25 @@ export const idlFactory = ({ IDL }) => {
     'timeReminder' : IDL.Opt(IDL.Text),
     'workoutName' : IDL.Text,
   });
+  const Tier = IDL.Record({ 'name' : IDL.Text, 'index' : IDL.Nat });
+  const TierProgressionResult = IDL.Record({
+    'direction' : IDL.Variant({
+      'up' : IDL.Null,
+      'down' : IDL.Null,
+      'same' : IDL.Null,
+    }),
+    'previousTier' : Tier,
+    'newTier' : Tier,
+  });
   const MotivationalMessage = IDL.Record({
     'id' : IDL.Nat,
     'message' : IDL.Text,
   });
   const UserProfile = IDL.Record({
+    'lastEvaluatedWeek' : IDL.Nat,
     'notificationsEnabled' : IDL.Bool,
     'displayName' : IDL.Text,
+    'currentTier' : IDL.Nat,
   });
   
   return IDL.Service({
@@ -126,6 +158,12 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'deleteWorkoutSchedule' : IDL.Func([IDL.Text], [], []),
+    'evaluateAndAdvanceTier' : IDL.Func([IDL.Nat], [TierProgressionResult], []),
+    'evaluateUserTierProgression' : IDL.Func(
+        [IDL.Principal, IDL.Nat, IDL.Nat],
+        [TierProgressionResult],
+        [],
+      ),
     'getAllMotivationalMessages' : IDL.Func(
         [],
         [IDL.Vec(MotivationalMessage)],
@@ -148,6 +186,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getUserTier' : IDL.Func([], [Tier], ['query']),
     'getWorkoutSchedules' : IDL.Func(
         [],
         [IDL.Vec(WorkoutScheduleEntry)],
@@ -155,6 +194,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isNotificationsEnabled' : IDL.Func([], [IDL.Bool], ['query']),
     'markWorkoutComplete' : IDL.Func([IDL.Text, IDL.Bool], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   });

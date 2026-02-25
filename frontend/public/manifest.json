@@ -1,0 +1,17 @@
+{
+  "name": "Daily Grind",
+  "short_name": "Daily Grind",
+  "description": "Track your daily workouts and stay motivated.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#f97316",
+  "icons": [
+    {
+      "src": "/assets/generated/app-logo.dim_256x256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

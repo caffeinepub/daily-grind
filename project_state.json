@@ -1,14 +1,14 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
+  "projectStateVersion": 7,
   "summary": "Building 'Daily Grind' — a daily workout reminder app with weekly workout schedule, today's workout view, mark-as-completed, motivational messages, progress tracking, and user authentication.",
   "architectural_notes": [
     "Three data tables: Workout Schedule, Motivation Messages, User",
-    "Four main screens: Today, Schedule, Progress, Settings"
+    "Four main screens: Today, Schedule, Progress, Settings",
+    "Tier progression: 22 tiers total (Dirt through Anti-matter), computed weekly based on schedule completion rate"
   ],
   "known_issues": [],
   "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Stylized flame icon on a dark background, bold and minimal fitness app logo style (app-logo.dim_256x256.png)",
   "existing_features": [
     {
       "id": "feature-build-a-today-s-workout-screen-that-auto-matches-the-current-day-of-the-week-derived-from-the-client-s-local-date-to-the-user-s-workout-schedule-entry-for-that-day-display-the-workout-name-workout-details-and-time-reminder-include-a-mark-as-completed-button-that-updates-the-completed-status-for-that-entry-if-no-workout-is-scheduled-for-today-show-a-friendly-placeholder-message",
@@ -55,6 +55,46 @@
       "title": "Apply a dark, high-energy fitness aesthetic throughout the app. Use a dark charcoal or near-black background with bold accent colors (e.g., fiery orange or electric green), strong typography, and a clean card-based layout. The visual theme should feel motivational and athletic. Apply it consistently across all screens.",
       "reqIds": [
         "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-settings-screen-accessible-from-the-app-navigation-display-the-user-s-current-tier-prominently-with-a-styled-tier-badge-tier-name-and-a-rank-icon-or-color-coded-visual-that-escalates-in-visual-intensity-as-the-tier-increases-show-the-weekly-completion-percentage-used-for-the-last-evaluation-and-the-advancement-thresholds-e-g-70-advance-40-hold-40-drop-include-a-evaluate-this-week-button-that-calls-evaluateandadvancetier-and-refreshes-the-displayed-tier-add-a-settings-link-to-the-app-s-navigation-bar-both-desktop-header-and-mobile-bottom-nav",
+      "title": "Create a Settings screen accessible from the app navigation. Display the user's current tier prominently with a styled tier badge (tier name and a rank icon or color-coded visual that escalates in visual intensity as the tier increases). Show the weekly completion percentage used for the last evaluation and the advancement thresholds (e.g., ≥70% = advance, ≥40% = hold, <40% = drop). Include a 'Evaluate This Week' button that calls `evaluateAndAdvanceTier` and refreshes the displayed tier. Add a Settings link to the app's navigation bar (both desktop header and mobile bottom nav).",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-small-current-tier-badge-or-label-to-the-progress-screen-showing-the-user-s-tier-name-fetched-via-getusertier-so-users-can-see-their-rank-alongside-their-weekly-stats-without-navigating-to-settings",
+      "title": "Add a small current tier badge or label to the Progress screen, showing the user's tier name fetched via `getUserTier`, so users can see their rank alongside their weekly stats without navigating to Settings.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-react-query-hook-useusertier-in-frontend-src-hooks-usequeries-ts-that-calls-the-backend-getusertier-function-and-a-mutation-hook-useevaluatetier-that-calls-evaluateandadvancetier-and-invalidates-the-tier-query-on-success",
+      "title": "Add a React Query hook `useUserTier` in `frontend/src/hooks/useQueries.ts` that calls the backend `getUserTier` function, and a mutation hook `useEvaluateTier` that calls `evaluateAndAdvanceTier` and invalidates the tier query on success.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-browser-based-web-push-notifications-on-the-frontend-when-a-logged-in-user-grants-notification-permission-schedule-a-repeating-local-notification-via-the-notifications-api-and-a-service-worker-with-a-periodic-alarm-or-settimeout-based-scheduler-that-fires-every-6-hours-while-the-browser-pwa-is-running-or-backgrounded-each-notification-should-include-a-reminder-message-to-complete-their-daily-workout-and-a-motivational-quote-fetched-from-the-backend-s-existing-random-motivational-message-endpoint",
+      "title": "Implement browser-based Web Push notifications on the frontend. When a logged-in user grants notification permission, schedule a repeating local notification (via the Notifications API and a Service Worker with a periodic alarm or setTimeout-based scheduler) that fires every 6 hours while the browser/PWA is running or backgrounded. Each notification should include a reminder message to complete their daily workout and a motivational quote fetched from the backend's existing random motivational message endpoint.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-notification-opt-in-opt-out-toggle-in-the-settings-screen-when-the-user-enables-notifications-request-browser-notification-permission-and-start-the-6-hour-reminder-schedule-when-disabled-cancel-any-scheduled-notifications-persist-the-user-s-notification-preference-using-the-existing-notificationsenabled-field-in-the-userprofile-backend",
+      "title": "Add a notification opt-in/opt-out toggle in the Settings screen. When the user enables notifications, request browser notification permission and start the 6-hour reminder schedule. When disabled, cancel any scheduled notifications. Persist the user's notification preference using the existing `notificationsEnabled` field in the UserProfile backend.",
+      "reqIds": [
+        "REQ-16"
       ],
       "version": 1
     }
@@ -118,6 +158,40 @@
       "reqIds": [
         "REQ-3"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Weekly tier progression system: users advance through tiers (Dirt 1-3, Bronze 1-3, Silver 1-3, Platinum 1-3, Gold 1-3, Emerald 1-3, Diamond 1-3, Anti-matter) based on weekly schedule completion percentage. Display current tier in Settings screen.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Add a tier progression data model to the backend. Define a fixed ordered list of 22 tiers: Dirt 1, Dirt 2, Dirt 3, Bronze 1, Bronze 2, Bronze 3, Silver 1, Silver 2, Silver 3, Platinum 1, Platinum 2, Platinum 3, Gold 1, Gold 2, Gold 3, Emerald 1, Emerald 2, Emerald 3, Diamond 1, Diamond 2, Diamond 3, Anti-matter. Extend the UserProfile type to store the user's current tier index (defaulting to 0, i.e., Dirt 1) and a record of the last week the tier was evaluated (stored as a week number or ISO week string). Expose an API function `evaluateAndAdvanceTier` that, when called, computes the user's weekly completion rate (completed workout days out of 7), advances the tier by one step if completion is 100%, advances by one step if ≥ 70%, stays at the same tier if ≥ 40%, and drops one tier if below 40% (never below Dirt 1). Update the stored tier and last-evaluated week. Return the new tier name and index.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Add a query function `getUserTier` to the backend that returns the caller's current tier name and index from their UserProfile without modifying it.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "AI workout generator: 'Don't have a workout?' section that suggests a workout regiment based on user goals, with option to auto-set it into their schedule",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Push notifications every 6 hours for users not actively in the app, reminding them to complete their daily workout along with a motivational quote",
+      "reqIds": [],
       "status": "pending"
     }
   ],

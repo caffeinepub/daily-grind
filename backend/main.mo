@@ -5,12 +5,14 @@ import Array "mo:core/Array";
 import Principal "mo:core/Principal";
 import Nat "mo:core/Nat";
 import Order "mo:core/Order";
+import Iter "mo:core/Iter";
 
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
+
 actor {
-  // Types
+  /// Types
   public type DayOfWeek = {
     #monday;
     #tuesday;
@@ -47,18 +49,57 @@ actor {
   public type UserProfile = {
     displayName : Text;
     notificationsEnabled : Bool;
+    currentTier : Nat;
+    lastEvaluatedWeek : Nat;
   };
+
+  public type Tier = {
+    index : Nat;
+    name : Text;
+  };
+
+  public type TierProgressionResult = {
+    newTier : Tier;
+    previousTier : Tier;
+    direction : { #up; #down; #same };
+  };
+
+  /// Tier constant
+  let tiers : [Tier] = [
+    { index = 0; name = "Dirt 1" },
+    { index = 1; name = "Dirt 2" },
+    { index = 2; name = "Dirt 3" },
+    { index = 3; name = "Bronze 1" },
+    { index = 4; name = "Bronze 2" },
+    { index = 5; name = "Bronze 3" },
+    { index = 6; name = "Silver 1" },
+    { index = 7; name = "Silver 2" },
+    { index = 8; name = "Silver 3" },
+    { index = 9; name = "Platinum 1" },
+    { index = 10; name = "Platinum 2" },
+    { index = 11; name = "Platinum 3" },
+    { index = 12; name = "Gold 1" },
+    { index = 13; name = "Gold 2" },
+    { index = 14; name = "Gold 3" },
+    { index = 15; name = "Emerald 1" },
+    { index = 16; name = "Emerald 2" },
+    { index = 17; name = "Emerald 3" },
+    { index = 18; name = "Diamond 1" },
+    { index = 19; name = "Diamond 2" },
+    { index = 20; name = "Diamond 3" },
+    { index = 21; name = "Anti-matter" },
+  ];
 
   // Initialize authorization state
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Persistent state
+  /// Persistent state
   let workoutSchedules = Map.empty<Text, WorkoutScheduleEntry>();
   let motivationalMessages = Map.empty<Nat, MotivationalMessage>();
   let userProfiles = Map.empty<Principal, UserProfile>();
 
-  // Seed motivational messages at initialization
+  /// Seed motivational messages at initialization
   do {
     motivationalMessages.add(1, { id = 1; message = "Push yourself because no one else is going to do it for you." });
     motivationalMessages.add(2, { id = 2; message = "Great things never come from comfort zones." });
@@ -66,6 +107,8 @@ actor {
     motivationalMessages.add(4, { id = 4; message = "It's going to be hard, but hard does not mean impossible." });
     motivationalMessages.add(5, { id = 5; message = "Don't stop when you're tired. Stop when you're done." });
   };
+
+  // ── Helper Functions ──────────────────────────────────────────────────────
 
   /// Helper function to check if caller has user role
   func callerHasUserRole(caller : Principal) : Bool {
@@ -75,6 +118,14 @@ actor {
   /// Helper function to check if caller is admin
   func callerIsAdmin(caller : Principal) : Bool {
     AccessControl.isAdmin(accessControlState, caller);
+  };
+
+  func getCurrentTier(userProfile : UserProfile) : Tier {
+    if (userProfile.currentTier < tiers.size()) {
+      tiers[userProfile.currentTier];
+    } else {
+      tiers[0];
+    };
   };
 
   // ── Workout Schedules API ──────────────────────────────────────────────────
@@ -181,11 +232,26 @@ actor {
   };
 
   /// Save (upsert) the caller's own profile. Requires authenticated user.
+  /// Preserves existing tier and lastEvaluatedWeek data to prevent users from resetting their tier.
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
     if (not callerHasUserRole(caller)) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
-    userProfiles.add(caller, profile);
+
+    // Preserve existing tier progression data; do not allow the caller to overwrite it
+    let (existingTier, existingWeek) = switch (userProfiles.get(caller)) {
+      case (null) { (0, 0) };
+      case (?existing) { (existing.currentTier, existing.lastEvaluatedWeek) };
+    };
+
+    let newOrDefaultProfile : UserProfile = {
+      displayName = profile.displayName;
+      notificationsEnabled = profile.notificationsEnabled;
+      currentTier = existingTier;
+      lastEvaluatedWeek = existingWeek;
+    };
+
+    userProfiles.add(caller, newOrDefaultProfile);
   };
 
   /// Get a specific user's profile. Callers may only view their own profile unless they are an admin.
@@ -206,5 +272,109 @@ actor {
   /// Check whether the caller is an admin.
   public query ({ caller }) func isAdmin() : async Bool {
     AccessControl.isAdmin(accessControlState, caller);
+  };
+
+  // ── Week Evaluation & Tier Progression ──────────────────────────────────────────
+
+  /// Evaluate a specific user's tier progression for a specific week (admin-only).
+  public shared ({ caller }) func evaluateUserTierProgression(
+    user : Principal,
+    weekNumber : Nat,
+    completedDays : Nat,
+  ) : async TierProgressionResult {
+    if (not callerIsAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only admins can evaluate user tiers");
+    };
+
+    let profile = switch (userProfiles.get(user)) {
+      case (null) { Runtime.trap("User not found") };
+      case (?profile) { profile };
+    };
+
+    evaluateAndUpdateTier(user, profile, weekNumber, completedDays);
+  };
+
+  /// Get the caller's current tier without modifying it. Requires authenticated user.
+  public query ({ caller }) func getUserTier() : async Tier {
+    if (not callerHasUserRole(caller)) {
+      Runtime.trap("Unauthorized: Only users can view their tier");
+    };
+    switch (userProfiles.get(caller)) {
+      case (null) { Runtime.trap("User not found") };
+      case (?profile) { getCurrentTier(profile) };
+    };
+  };
+
+  /// Evaluate and advance the caller's tier progression for a specific week.
+  /// Requires authenticated user.
+  public shared ({ caller }) func evaluateAndAdvanceTier(weekNumber : Nat) : async TierProgressionResult {
+    if (not callerHasUserRole(caller)) {
+      Runtime.trap("Unauthorized: Only users can evaluate and advance their tier");
+    };
+
+    let profile = switch (userProfiles.get(caller)) {
+      case (null) { Runtime.trap("User not found") };
+      case (?profile) { profile };
+    };
+
+    let completedDays = workoutSchedules.values().toArray().filter(func(entry) { entry.owner == caller }).filter(func(entry) { entry.completed }).size();
+
+    evaluateAndUpdateTier(caller, profile, weekNumber, completedDays);
+  };
+
+  /// Helper function to move the user to the new tier based on completed days.
+  /// Takes the user principal explicitly to correctly persist the updated profile.
+  func evaluateAndUpdateTier(user : Principal, profile : UserProfile, week : Nat, completedDays : Nat) : TierProgressionResult {
+    let previousTier = getCurrentTier(profile);
+
+    let completionRate = completedDays.toFloat() / 7.0;
+    var newTierIndex = profile.currentTier;
+    var direction : { #up; #down; #same } = #same;
+
+    if (completionRate >= 1.0) {
+      direction := #up;
+      newTierIndex := Nat.min(profile.currentTier + 1, tiers.size() - 1);
+    } else if (completionRate >= 0.7) {
+      direction := #up;
+      newTierIndex := Nat.min(profile.currentTier + 1, tiers.size() - 1);
+    } else if (completionRate >= 0.4) {
+      direction := #same;
+    } else {
+      if (profile.currentTier > 0) {
+        direction := #down;
+        newTierIndex := profile.currentTier - 1;
+      } else {
+        direction := #same;
+        newTierIndex := 0;
+      };
+    };
+
+    let updatedProfile : UserProfile = {
+      profile with
+      currentTier = newTierIndex;
+      lastEvaluatedWeek = week;
+    };
+
+    userProfiles.add(user, updatedProfile);
+
+    {
+      newTier = tiers[newTierIndex];
+      previousTier;
+      direction;
+    };
+  };
+
+  /// Only for backwards compatibility with the original model (Motoko allows
+  /// for null queries). This method should be preferred over getting the
+  /// profile directly.
+  public query ({ caller }) func isNotificationsEnabled() : async Bool {
+    if (not callerHasUserRole(caller)) {
+      Runtime.trap("Unauthorized: Only users can view notification preference");
+    };
+
+    switch (userProfiles.get(caller)) {
+      case (null) { false };
+      case (?profile) { profile.notificationsEnabled };
+    };
   };
 };

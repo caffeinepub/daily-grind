@@ -1,201 +1,65 @@
 {
   "kind": "build_request",
-  "title": "Daily Grind — Full-Stack Workout Tracker App",
+  "title": "Add periodic push notifications every 6 hours with motivational quotes",
   "projectName": "Daily Grind",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Create a backend data model and API for workout schedules. Each schedule entry should include: day of week (Monday–Sunday), workout name, workout details, time reminder, completed status, and owner identity. Support create, read, update, and delete operations, with data scoped per authenticated user.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Table 1: Workout Schedule",
-          "Day, Workout Name, Workout Details, Time Reminder, Completed?, User Email"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend stores workout schedule entries with all required fields",
-        "CRUD operations exist for workout entries",
-        "Data is scoped to the authenticated caller's principal"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Create a backend data model and API for motivational messages. Seed at least 5 default messages. Support fetching a random motivational message.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Table 2: Motivation Messages",
-          "No excuses today. Get after it.",
-          "Discipline > Motivation.",
-          "Future you is watching.",
-          "One workout closer to elite.",
-          "Stay locked in."
-        ]
-      },
-      "acceptanceCriteria": [
-        "At least 5 motivational messages are stored",
-        "A query function returns a random message"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Create a backend API for user profiles. Each profile stores a display name and whether push notifications are enabled, keyed by the caller's principal. Support get and upsert operations.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Table 3: User",
-          "Name, Push Notifications"
-        ]
-      },
-      "acceptanceCriteria": [
-        "User profile can be created or updated",
-        "Profile is retrievable by the authenticated caller"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Build a 'Today's Workout' screen that auto-matches the current day of the week (derived from the client's local date) to the user's workout schedule entry for that day. Display the workout name, workout details, and time reminder. Include a 'Mark as Completed ✅' button that updates the completed status for that entry. If no workout is scheduled for today, show a friendly placeholder message.",
+      "id": "REQ-15",
+      "text": "Implement browser-based Web Push notifications on the frontend. When a logged-in user grants notification permission, schedule a repeating local notification (via the Notifications API and a Service Worker with a periodic alarm or setTimeout-based scheduler) that fires every 6 hours while the browser/PWA is running or backgrounded. Each notification should include a reminder message to complete their daily workout and a motivational quote fetched from the backend's existing random motivational message endpoint.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-recent-user-notification"
         ],
         "quotes": [
-          "Screen 1: Today's Workout",
-          "Mark as Completed",
-          "Set Column → Completed? → True"
+          "get notifications every 6 hours to complete their daily workout along with a motivational quote"
         ]
       },
       "acceptanceCriteria": [
-        "The screen shows the workout matching today's day of the week",
-        "Workout name, details, and time are displayed",
-        "Tapping 'Mark as Completed' updates the entry and reflects the change in the UI",
-        "A placeholder is shown when no workout exists for today"
+        "A Service Worker is registered in the frontend that can display push/local notifications.",
+        "On first login (or from a visible permission prompt in the app), the user is asked to grant notification permission.",
+        "If permission is granted, a notification fires every 6 hours (using a setInterval or service worker periodic scheduler) with a title such as 'Time to grind! 💪' and a body containing a motivational quote.",
+        "If permission is denied or not yet granted, the app continues to function normally without errors.",
+        "Notifications appear even when the user is not actively viewing the app (browser is backgrounded or tab is closed but service worker is active).",
+        "Tapping/clicking the notification opens or focuses the app."
       ]
     },
     {
-      "id": "REQ-5",
-      "text": "Build a 'Schedule' screen that lists all 7 days of the week with their assigned workouts. Allow the user to edit each day's workout name, workout details, and time reminder inline or via a detail/edit form. Changes should persist to the backend.",
+      "id": "REQ-16",
+      "text": "Add a notification opt-in/opt-out toggle in the Settings screen. When the user enables notifications, request browser notification permission and start the 6-hour reminder schedule. When disabled, cancel any scheduled notifications. Persist the user's notification preference using the existing `notificationsEnabled` field in the UserProfile backend.",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-recent-user-notification"
         ],
         "quotes": [
-          "Allow Custom Workout Editing",
-          "Change Workout Name, Change Workout Details, Change Time Reminder",
-          "Filter: User Email = Signed-in user"
+          "people who use the app but are not directly on it in the moment can get notifications every 6 hours"
         ]
       },
       "acceptanceCriteria": [
-        "All 7 days are listed on the Schedule screen",
-        "Each day's workout can be edited and saved",
-        "Saved changes are reflected immediately in the UI and persisted to the backend"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Build a 'Progress' screen that shows: total workouts completed this week, a weekly completion streak (consecutive days with completed workouts), and a visual progress bar or indicator showing how many of the 7 days this week have been completed.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Progress bar (count Completed workouts this week)",
-          "Streak counter"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Completed workout count for the current week is displayed",
-        "A streak count (consecutive completed days) is shown",
-        "A progress bar or visual indicator reflects weekly completion percentage"
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Display a random motivational message fetched from the backend prominently on the Today's Workout screen or as a dedicated banner/card visible from the home view.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Use random row from Motivation Messages",
-          "Stay Locked In 🔥"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A motivational message is displayed on load",
-        "The message is sourced from the backend motivational messages pool"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Integrate Internet Identity authentication. Gate all workout data and profile features behind login. Show a login prompt to unauthenticated users. After login, load the user's personal workout schedule.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2",
-          "msg-3"
-        ],
-        "quotes": [
-          "User authentication (email sign-in) with user-specific workout data",
-          "Settings → Privacy → Enable Sign-in"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Unauthenticated users see a login screen",
-        "After authenticating via Internet Identity, the user's personal data loads",
-        "Logout clears the session and returns to the login screen"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Apply a dark, high-energy fitness aesthetic throughout the app. Use a dark charcoal or near-black background with bold accent colors (e.g., fiery orange or electric green), strong typography, and a clean card-based layout. The visual theme should feel motivational and athletic. Apply it consistently across all screens.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Dark theme fitness aesthetic",
-          "App icon with flame logo"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All screens use a consistent dark fitness theme",
-        "Accent colors are applied to CTAs, progress indicators, and highlights",
-        "Typography is bold and legible against dark backgrounds"
+        "The Settings screen displays a toggle labeled 'Workout Reminders' or similar that reflects the current notification opt-in state.",
+        "Toggling on requests browser notification permission if not already granted; if permission is denied by the browser, the toggle reverts and shows an explanatory message.",
+        "Toggling off cancels/clears any pending scheduled notifications.",
+        "The preference is saved to the backend via the existing user profile upsert function so it persists across sessions.",
+        "On app load, if the stored preference is enabled and permission is already granted, the notification schedule resumes automatically."
       ]
     }
   ],
   "constraints": [
-    "All workout data must be scoped per authenticated user principal — no cross-user data leakage",
-    "Do not edit any files under frontend/src/hooks/ or frontend/src/components/ui"
+    "Do not use any third-party push notification service (e.g., Firebase FCM, OneSignal). Use only the browser Notifications API and Service Worker.",
+    "Do not modify immutable frontend paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Backend logic must remain in the single main actor (backend/main.mo). Use the existing notificationsEnabled field in UserProfile — do not add a new field if one already exists."
   ],
   "nonGoals": [
-    "Push notifications (not supported on this platform)",
-    "AI workout generation",
-    "Weight tracking",
-    "Payment or premium upgrade flows",
-    "Glide integration"
+    "Native iOS/Android push notifications via APNs or FCM.",
+    "Server-side push message delivery (no backend push infrastructure).",
+    "SMS or email notification delivery.",
+    "Real-time WebSocket-based notifications.",
+    "Changing the 6-hour interval to be user-configurable in this iteration."
   ],
   "imageRequirements": {
-    "required": [
-      "Stylized flame icon on a dark background, bold and minimal fitness app logo style (app-logo.dim_256x256.png)"
-    ],
+    "required": [],
     "edits": []
   }
 }

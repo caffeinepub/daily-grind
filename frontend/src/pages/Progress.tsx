@@ -3,8 +3,9 @@ import { TrendingUp, Flame, CheckCircle2, Target, Calendar } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress as ProgressBar } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useGetWorkoutSchedules, useGetCallerUserProfile } from '../hooks/useQueries';
+import { useGetWorkoutSchedules, useGetCallerUserProfile, useUserTier } from '../hooks/useQueries';
 import { DayOfWeek, WorkoutScheduleEntry } from '../backend';
+import TierBadge from '../components/TierBadge';
 
 const DAYS_ORDER: { label: string; short: string; value: DayOfWeek }[] = [
   { label: 'Monday', short: 'Mon', value: DayOfWeek.monday },
@@ -32,10 +33,8 @@ function calculateStreak(schedules: WorkoutScheduleEntry[]): number {
     if (workout?.completed) {
       streak++;
     } else if (workout) {
-      // Has a workout but not completed — break streak
       break;
     }
-    // No workout scheduled = rest day, doesn't break streak
   }
 
   return streak;
@@ -55,6 +54,7 @@ function calculateWeeklyProgress(schedules: WorkoutScheduleEntry[]): {
 export default function Progress() {
   const { data: schedules, isLoading } = useGetWorkoutSchedules();
   const { data: userProfile } = useGetCallerUserProfile();
+  const { data: tier } = useUserTier();
 
   const todayDayOfWeek = getTodayDayOfWeek();
 
@@ -80,11 +80,16 @@ export default function Progress() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-black">{greeting}</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black">{greeting}</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+        {tier && (
+          <TierBadge tier={tier} variant="compact" className="mt-1 flex-shrink-0" />
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -201,18 +206,16 @@ export default function Progress() {
                       workout?.completed
                         ? 'bg-success/20'
                         : workout
-                        ? isToday
-                          ? 'bg-primary/20'
-                          : 'bg-muted/50'
-                        : 'bg-muted/20'
+                        ? 'bg-muted'
+                        : 'bg-muted/40'
                     }`}
                   >
                     {workout?.completed ? (
                       <CheckCircle2 size={16} className="text-success" />
                     ) : workout ? (
-                      <Target size={16} className={isToday ? 'text-primary' : 'text-muted-foreground'} />
+                      <Target size={16} className="text-muted-foreground" />
                     ) : (
-                      <span className="text-xs text-muted-foreground/40">—</span>
+                      <span className="text-xs text-muted-foreground/50">—</span>
                     )}
                   </div>
 
@@ -223,26 +226,30 @@ export default function Progress() {
                         {day.label}
                       </span>
                       {isToday && (
-                        <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                           Today
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {workout ? workout.workoutName : 'Rest day'}
-                    </p>
-                  </div>
-
-                  {/* Status Badge */}
-                  <div className="flex-shrink-0">
-                    {workout?.completed ? (
-                      <span className="text-xs font-bold text-success">Done ✓</span>
-                    ) : workout ? (
-                      <span className="text-xs font-medium text-muted-foreground">Pending</span>
+                    {workout ? (
+                      <p className="text-xs text-muted-foreground truncate">{workout.workoutName}</p>
                     ) : (
-                      <span className="text-xs text-muted-foreground/40">—</span>
+                      <p className="text-xs text-muted-foreground/50">Rest day</p>
                     )}
                   </div>
+
+                  {/* Completion Badge */}
+                  {workout && (
+                    <span
+                      className={`text-xs font-bold px-2 py-1 rounded-md flex-shrink-0 ${
+                        workout.completed
+                          ? 'bg-success/15 text-success'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {workout.completed ? 'Done' : 'Pending'}
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -250,26 +257,14 @@ export default function Progress() {
         )}
       </div>
 
-      {/* Motivational Footer */}
-      {stats && stats.percentage === 100 && (
-        <Card className="bg-gradient-to-br from-primary/20 to-primary/5 border-primary/30">
+      {/* Perfect Week Celebration */}
+      {stats && stats.total > 0 && stats.completed === stats.total && (
+        <Card className="bg-success/10 border-success/30">
           <CardContent className="p-5 text-center">
             <p className="text-2xl mb-1">🏆</p>
-            <p className="font-black text-foreground">Perfect Week!</p>
-            <p className="text-sm text-muted-foreground mt-1">You crushed every workout this week. Legendary.</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {stats && stats.total === 0 && (
-        <Card className="bg-card border-border/40 border-dashed">
-          <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground text-sm">
-              No workouts scheduled yet. Head to the{' '}
-              <a href="/schedule" className="text-primary font-bold hover:underline">
-                Schedule
-              </a>{' '}
-              tab to plan your week!
+            <p className="font-black text-success text-lg">Perfect Week!</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              You completed all {stats.total} scheduled workouts. Incredible!
             </p>
           </CardContent>
         </Card>

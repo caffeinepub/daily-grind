@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
-import { Flame, Calendar, TrendingUp, Dumbbell } from 'lucide-react';
+import { Flame, Calendar, TrendingUp, Dumbbell, Settings2 } from 'lucide-react';
 import LoginButton from './LoginButton';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 
@@ -12,6 +12,7 @@ const navLinks = [
   { to: '/today', label: 'Today', icon: Flame },
   { to: '/schedule', label: 'Schedule', icon: Calendar },
   { to: '/progress', label: 'Progress', icon: TrendingUp },
+  { to: '/settings', label: 'Settings', icon: Settings2 },
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -80,7 +81,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <Link
                   key={to}
                   to={to}
-                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-md transition-all ${
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-md transition-all ${
                     isActive ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 >

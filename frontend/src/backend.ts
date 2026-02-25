@@ -89,10 +89,6 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface MotivationalMessage {
-    id: bigint;
-    message: string;
-}
 export interface WorkoutScheduleEntry {
     workoutDetails: string;
     owner: Principal;
@@ -101,9 +97,24 @@ export interface WorkoutScheduleEntry {
     timeReminder?: string;
     workoutName: string;
 }
+export interface TierProgressionResult {
+    direction: Variant_up_down_same;
+    previousTier: Tier;
+    newTier: Tier;
+}
+export interface MotivationalMessage {
+    id: bigint;
+    message: string;
+}
+export interface Tier {
+    name: string;
+    index: bigint;
+}
 export interface UserProfile {
+    lastEvaluatedWeek: bigint;
     notificationsEnabled: boolean;
     displayName: string;
+    currentTier: bigint;
 }
 export enum DayOfWeek {
     tuesday = "tuesday",
@@ -118,6 +129,11 @@ export enum UserRole {
     admin = "admin",
     user = "user",
     guest = "guest"
+}
+export enum Variant_up_down_same {
+    up = "up",
+    down = "down",
+    same = "same"
 }
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
@@ -134,6 +150,15 @@ export interface backendInterface {
      * / Delete a workout schedule entry. Only the owner may delete their own entry.
      */
     deleteWorkoutSchedule(id: string): Promise<void>;
+    /**
+     * / Evaluate and advance the caller's tier progression for a specific week.
+     * / Requires authenticated user.
+     */
+    evaluateAndAdvanceTier(weekNumber: bigint): Promise<TierProgressionResult>;
+    /**
+     * / Evaluate a specific user's tier progression for a specific week (admin-only).
+     */
+    evaluateUserTierProgression(user: Principal, weekNumber: bigint, completedDays: bigint): Promise<TierProgressionResult>;
     /**
      * / Fetch all motivational messages. Available to all callers including guests.
      */
@@ -156,6 +181,10 @@ export interface backendInterface {
      */
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     /**
+     * / Get the caller's current tier without modifying it. Requires authenticated user.
+     */
+    getUserTier(): Promise<Tier>;
+    /**
      * / Returns all workout schedule entries owned by the caller.
      */
     getWorkoutSchedules(): Promise<Array<WorkoutScheduleEntry>>;
@@ -165,15 +194,22 @@ export interface backendInterface {
     isAdmin(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     /**
+     * / Only for backwards compatibility with the original model (Motoko allows
+     * / for null queries). This method should be preferred over getting the
+     * / profile directly.
+     */
+    isNotificationsEnabled(): Promise<boolean>;
+    /**
      * / Mark a specific workout as complete or incomplete. Only the owner may do this.
      */
     markWorkoutComplete(id: string, completed: boolean): Promise<void>;
     /**
      * / Save (upsert) the caller's own profile. Requires authenticated user.
+     * / Preserves existing tier and lastEvaluatedWeek data to prevent users from resetting their tier.
      */
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
 }
-import type { DayOfWeek as _DayOfWeek, UserProfile as _UserProfile, UserRole as _UserRole, WorkoutScheduleEntry as _WorkoutScheduleEntry } from "./declarations/backend.did.d.ts";
+import type { DayOfWeek as _DayOfWeek, Tier as _Tier, TierProgressionResult as _TierProgressionResult, UserProfile as _UserProfile, UserRole as _UserRole, WorkoutScheduleEntry as _WorkoutScheduleEntry } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -246,6 +282,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async evaluateAndAdvanceTier(arg0: bigint): Promise<TierProgressionResult> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.evaluateAndAdvanceTier(arg0);
+                return from_candid_TierProgressionResult_n7(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.evaluateAndAdvanceTier(arg0);
+            return from_candid_TierProgressionResult_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async evaluateUserTierProgression(arg0: Principal, arg1: bigint, arg2: bigint): Promise<TierProgressionResult> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.evaluateUserTierProgression(arg0, arg1, arg2);
+                return from_candid_TierProgressionResult_n7(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.evaluateUserTierProgression(arg0, arg1, arg2);
+            return from_candid_TierProgressionResult_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getAllMotivationalMessages(): Promise<Array<MotivationalMessage>> {
         if (this.processError) {
             try {
@@ -264,28 +328,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserProfile();
-                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserProfile();
-            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCallerUserRole(): Promise<UserRole> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole_n11(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole_n11(this._uploadFile, this._downloadFile, result);
         }
     }
     async getMotivationalMessage(arg0: bigint): Promise<MotivationalMessage> {
@@ -320,28 +384,42 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserProfile(arg0);
-                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserProfile(arg0);
-            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUserTier(): Promise<Tier> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserTier();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserTier();
+            return result;
         }
     }
     async getWorkoutSchedules(): Promise<Array<WorkoutScheduleEntry>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getWorkoutSchedules();
-                return from_candid_vec_n10(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n13(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getWorkoutSchedules();
-            return from_candid_vec_n10(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n13(this._uploadFile, this._downloadFile, result);
         }
     }
     async isAdmin(): Promise<boolean> {
@@ -369,6 +447,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isCallerAdmin();
+            return result;
+        }
+    }
+    async isNotificationsEnabled(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isNotificationsEnabled();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isNotificationsEnabled();
             return result;
         }
     }
@@ -401,22 +493,25 @@ export class Backend implements backendInterface {
         }
     }
 }
-function from_candid_DayOfWeek_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _DayOfWeek): DayOfWeek {
-    return from_candid_variant_n14(_uploadFile, _downloadFile, value);
+function from_candid_DayOfWeek_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _DayOfWeek): DayOfWeek {
+    return from_candid_variant_n17(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n9(_uploadFile, _downloadFile, value);
+function from_candid_TierProgressionResult_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _TierProgressionResult): TierProgressionResult {
+    return from_candid_record_n8(_uploadFile, _downloadFile, value);
 }
-function from_candid_WorkoutScheduleEntry_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _WorkoutScheduleEntry): WorkoutScheduleEntry {
-    return from_candid_record_n12(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n12(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_WorkoutScheduleEntry_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _WorkoutScheduleEntry): WorkoutScheduleEntry {
+    return from_candid_record_n15(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+function from_candid_opt_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     workoutDetails: string;
     owner: Principal;
     dayOfWeek: _DayOfWeek;
@@ -434,13 +529,43 @@ function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         workoutDetails: value.workoutDetails,
         owner: value.owner,
-        dayOfWeek: from_candid_DayOfWeek_n13(_uploadFile, _downloadFile, value.dayOfWeek),
+        dayOfWeek: from_candid_DayOfWeek_n16(_uploadFile, _downloadFile, value.dayOfWeek),
         completed: value.completed,
-        timeReminder: record_opt_to_undefined(from_candid_opt_n15(_uploadFile, _downloadFile, value.timeReminder)),
+        timeReminder: record_opt_to_undefined(from_candid_opt_n18(_uploadFile, _downloadFile, value.timeReminder)),
         workoutName: value.workoutName
     };
 }
-function from_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    direction: {
+        up: null;
+    } | {
+        down: null;
+    } | {
+        same: null;
+    };
+    previousTier: _Tier;
+    newTier: _Tier;
+}): {
+    direction: Variant_up_down_same;
+    previousTier: Tier;
+    newTier: Tier;
+} {
+    return {
+        direction: from_candid_variant_n9(_uploadFile, _downloadFile, value.direction),
+        previousTier: value.previousTier,
+        newTier: value.newTier
+    };
+}
+function from_candid_variant_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+}): UserRole {
+    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+}
+function from_candid_variant_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     tuesday: null;
 } | {
     wednesday: null;
@@ -458,16 +583,16 @@ function from_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Ui
     return "tuesday" in value ? DayOfWeek.tuesday : "wednesday" in value ? DayOfWeek.wednesday : "saturday" in value ? DayOfWeek.saturday : "thursday" in value ? DayOfWeek.thursday : "sunday" in value ? DayOfWeek.sunday : "friday" in value ? DayOfWeek.friday : "monday" in value ? DayOfWeek.monday : value;
 }
 function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    admin: null;
+    up: null;
 } | {
-    user: null;
+    down: null;
 } | {
-    guest: null;
-}): UserRole {
-    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+    same: null;
+}): Variant_up_down_same {
+    return "up" in value ? Variant_up_down_same.up : "down" in value ? Variant_up_down_same.down : "same" in value ? Variant_up_down_same.same : value;
 }
-function from_candid_vec_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_WorkoutScheduleEntry>): Array<WorkoutScheduleEntry> {
-    return value.map((x)=>from_candid_WorkoutScheduleEntry_n11(_uploadFile, _downloadFile, x));
+function from_candid_vec_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_WorkoutScheduleEntry>): Array<WorkoutScheduleEntry> {
+    return value.map((x)=>from_candid_WorkoutScheduleEntry_n14(_uploadFile, _downloadFile, x));
 }
 function to_candid_DayOfWeek_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: DayOfWeek): _DayOfWeek {
     return to_candid_variant_n6(_uploadFile, _downloadFile, value);

@@ -1,237 +1,68 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T23:50:48.388Z",
+  "generatedAt": "2026-02-25T02:58:05.129Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 9,
-    "implemented": 6,
+    "total": 2,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Create a backend data model and API for workout schedules. Each schedule entry should include: day of week (Monday–Sunday), workout name, workout details, time reminder, completed status, and owner identity. Support create, read, update, and delete operations, with data scoped per authenticated user.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Create a backend data model and API for motivational messages. Seed at least 5 default messages. Support fetching a random motivational message.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Create a backend API for user profiles. Each profile stores a display name and whether push notifications are enabled, keyed by the caller's principal. Support get and upsert operations.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Build a 'Today's Workout' screen that auto-matches the current day of the week (derived from the client's local date) to the user's workout schedule entry for that day. Display the workout name, workout details, and time reminder. Include a 'Mark as Completed ✅' button that updates the completed status for that entry. If no workout is scheduled for today, show a friendly placeholder message.",
+        "id": "REQ-15",
+        "summary": "Implement browser-based Web Push notifications on the frontend. When a logged-in user grants notification permission, schedule a repeating local notification (via the Notifications API and a Service Worker with a periodic alarm or setTimeout-based scheduler) that fires every 6 hours while the browser/PWA is running or backgrounded. Each notification should include a reminder message to complete their daily workout and a motivational quote fetched from the backend's existing random motivational message endpoint.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useWorkoutSchedules.ts",
-          "frontend/src/hooks/useMarkWorkoutComplete.ts",
-          "frontend/src/pages/TodaysWorkout.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/TodaysWorkout.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Build a 'Schedule' screen that lists all 7 days of the week with their assigned workouts. Allow the user to edit each day's workout name, workout details, and time reminder inline or via a detail/edit form. Changes should persist to the backend.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useCreateOrUpdateWorkoutSchedule.ts",
-          "frontend/src/pages/Schedule.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Schedule.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Build a 'Progress' screen that shows: total workouts completed this week, a weekly completion streak (consecutive days with completed workouts), and a visual progress bar or indicator showing how many of the 7 days this week have been completed.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/progressCalculations.ts",
-          "frontend/src/pages/Progress.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Progress.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Display a random motivational message fetched from the backend prominently on the Today's Workout screen or as a dedicated banner/card visible from the home view.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useRandomMotivationalMessage.ts",
-          "frontend/src/pages/TodaysWorkout.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/TodaysWorkout.tsx"
-        ]
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Integrate Internet Identity authentication. Gate all workout data and profile features behind login. Show a login prompt to unauthenticated users. After login, load the user's personal workout schedule.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useGetCallerUserProfile.ts",
-          "frontend/src/hooks/useSaveCallerUserProfile.ts",
-          "frontend/src/components/LoginButton.tsx",
-          "frontend/src/components/ProfileSetupModal.tsx",
-          "frontend/src/components/AuthGuard.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/LoginButton.tsx",
-          "frontend/src/components/ProfileSetupModal.tsx",
-          "frontend/src/components/AuthGuard.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Apply a dark, high-energy fitness aesthetic throughout the app. Use a dark charcoal or near-black background with bold accent colors (e.g., fiery orange or electric green), strong typography, and a clean card-based layout. The visual theme should feel motivational and athletic. Apply it consistently across all screens.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/components/AppLayout.tsx",
+          "frontend/public/sw.js",
+          "frontend/src/utils/notificationService.ts",
+          "frontend/src/hooks/useNotifications.ts",
           "frontend/src/App.tsx",
-          "frontend/public/assets/generated/app-logo.dim_256x256.png"
+          "frontend/index.html",
+          "frontend/public/manifest.json"
         ],
         "matchedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/components/AppLayout.tsx",
+          "frontend/public/sw.js",
+          "frontend/src/utils/notificationService.ts",
+          "frontend/src/hooks/useNotifications.ts",
           "frontend/src/App.tsx",
-          "frontend/public/assets/generated/app-logo.dim_256x256.png"
+          "frontend/index.html",
+          "frontend/public/manifest.json"
+        ]
+      },
+      {
+        "id": "REQ-16",
+        "summary": "Add a notification opt-in/opt-out toggle in the Settings screen. When the user enables notifications, request browser notification permission and start the 6-hour reminder schedule. When disabled, cancel any scheduled notifications. Persist the user's notification preference using the existing `notificationsEnabled` field in the UserProfile backend.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Settings.tsx",
+          "frontend/src/hooks/useNotifications.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Settings.tsx",
+          "frontend/src/hooks/useNotifications.ts"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/authorization/MixinAuthorization.mo",
-    "backend/authorization/access-control.mo",
     "backend/main.mo",
     "build-request.json",
-    "build-template/Dockerfile",
-    "build-template/LICENSE",
-    "build-template/README.md",
-    "build-template/deploy.sh",
-    "build-template/icp.yaml",
-    "build-template/package.json",
-    "build-template/pnpm-lock.yaml",
-    "build-template/pnpm-workspace.yaml",
-    "build-template/scripts/prune-unused-images.js",
-    "build-template/scripts/resize-images.js",
-    "build-template/src/backend/canister.yaml",
-    "build-template/src/backend/system-idl/aaaaa-aa.did",
-    "build-template/src/frontend/canister.yaml",
-    "build-template/src/frontend/components.json",
-    "build-template/src/frontend/env.json",
-    "build-template/src/frontend/eslint-rules/no-bigint-in-query-keys.js",
-    "build-template/src/frontend/eslint-rules/require-internet-identity-provider.js",
-    "build-template/src/frontend/eslint.config.js",
-    "build-template/src/frontend/package.json",
-    "build-template/src/frontend/postcss.config.js",
-    "build-template/src/frontend/src/components/ui/accordion.tsx",
-    "build-template/src/frontend/src/components/ui/alert-dialog.tsx",
-    "build-template/src/frontend/src/components/ui/alert.tsx",
-    "build-template/src/frontend/src/components/ui/aspect-ratio.tsx",
-    "build-template/src/frontend/src/components/ui/avatar.tsx",
-    "build-template/src/frontend/src/components/ui/badge.tsx",
-    "build-template/src/frontend/src/components/ui/breadcrumb.tsx",
-    "build-template/src/frontend/src/components/ui/button.tsx",
-    "build-template/src/frontend/src/components/ui/calendar.tsx",
-    "build-template/src/frontend/src/components/ui/card.tsx",
-    "build-template/src/frontend/src/components/ui/carousel.tsx",
-    "build-template/src/frontend/src/components/ui/chart.tsx",
-    "build-template/src/frontend/src/components/ui/checkbox.tsx",
-    "build-template/src/frontend/src/components/ui/collapsible.tsx",
-    "build-template/src/frontend/src/components/ui/command.tsx",
-    "build-template/src/frontend/src/components/ui/context-menu.tsx",
-    "build-template/src/frontend/src/components/ui/dialog.tsx",
-    "build-template/src/frontend/src/components/ui/drawer.tsx",
-    "build-template/src/frontend/src/components/ui/dropdown-menu.tsx",
-    "build-template/src/frontend/src/components/ui/form.tsx",
-    "build-template/src/frontend/src/components/ui/hover-card.tsx",
-    "build-template/src/frontend/src/components/ui/input-otp.tsx",
-    "build-template/src/frontend/src/components/ui/input.tsx",
-    "build-template/src/frontend/src/components/ui/label.tsx",
-    "build-template/src/frontend/src/components/ui/menubar.tsx",
-    "build-template/src/frontend/src/components/ui/navigation-menu.tsx",
-    "build-template/src/frontend/src/components/ui/pagination.tsx",
-    "build-template/src/frontend/src/components/ui/popover.tsx",
-    "build-template/src/frontend/src/components/ui/progress.tsx",
-    "build-template/src/frontend/src/components/ui/radio-group.tsx",
-    "build-template/src/frontend/src/components/ui/resizable.tsx",
-    "build-template/src/frontend/src/components/ui/scroll-area.tsx",
-    "build-template/src/frontend/src/components/ui/select.tsx",
-    "build-template/src/frontend/src/components/ui/separator.tsx",
-    "build-template/src/frontend/src/components/ui/sheet.tsx",
-    "build-template/src/frontend/src/components/ui/sidebar.tsx",
-    "build-template/src/frontend/src/components/ui/skeleton.tsx",
-    "build-template/src/frontend/src/components/ui/slider.tsx",
-    "build-template/src/frontend/src/components/ui/sonner.tsx",
-    "build-template/src/frontend/src/components/ui/switch.tsx",
-    "build-template/src/frontend/src/components/ui/table.tsx",
-    "build-template/src/frontend/src/components/ui/tabs.tsx",
-    "build-template/src/frontend/src/components/ui/textarea.tsx",
-    "build-template/src/frontend/src/components/ui/toggle-group.tsx",
-    "build-template/src/frontend/src/components/ui/toggle.tsx",
-    "build-template/src/frontend/src/components/ui/tooltip.tsx",
-    "build-template/src/frontend/src/hooks/use-mobile.tsx",
-    "build-template/src/frontend/src/lib/utils.ts",
-    "build-template/src/frontend/tsconfig.json",
-    "build-template/src/frontend/vite.config.js",
-    "build-template/tsconfig.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/index.css",
     "frontend/index.html",
-    "frontend/public/assets/generated/app-logo.dim_256x256.png",
+    "frontend/public/manifest.json",
+    "frontend/public/sw.js",
     "frontend/src/App.tsx",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/AppLayout.tsx",
-    "frontend/src/components/AuthGuard.tsx",
-    "frontend/src/components/LoginButton.tsx",
-    "frontend/src/components/LoginScreen.tsx",
-    "frontend/src/components/ProfileSetupModal.tsx",
-    "frontend/src/config.ts",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/pages/Progress.tsx",
-    "frontend/src/pages/Schedule.tsx",
-    "frontend/src/pages/TodaysWorkout.tsx",
-    "frontend/src/ui-summary.json",
-    "frontend/src/utils/StorageClient.ts",
-    "frontend/src/utils/urlParams.ts",
-    "frontend/tailwind.config.js",
+    "frontend/src/hooks/useNotifications.ts",
+    "frontend/src/pages/Settings.tsx",
+    "frontend/src/utils/notificationService.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

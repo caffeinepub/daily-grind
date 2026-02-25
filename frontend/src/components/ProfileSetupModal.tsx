@@ -29,6 +29,8 @@ export default function ProfileSetupModal({ open }: ProfileSetupModalProps) {
     await saveProfile.mutateAsync({
       displayName: displayName.trim(),
       notificationsEnabled,
+      currentTier: 0n,
+      lastEvaluatedWeek: 0n,
     });
   };
 

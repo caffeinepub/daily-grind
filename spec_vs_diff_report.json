@@ -1,49 +1,58 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T23:50:48.384Z",
-  "summary": "The diff implements the vast majority of requirements comprehensively. All 9 REQs have substantial implementation evidence. Backend covers workout schedules with full CRUD, motivational messages with 5 seeds, and user profiles. Frontend covers Today's Workout, Schedule, Progress, authentication via Internet Identity, and dark fitness theme. Minor notes: the streak calculation only counts backwards from today within the current week rather than strictly consecutive days, but the core requirement is met. Overall implementation is thorough.",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-02-25T02:58:05.126Z",
+  "summary": "The diff implements both REQ-15 and REQ-16 largely as specified. A Service Worker (sw.js) is registered, notification permission is requested, a 6-hour setInterval schedule is managed via SW messages, a Settings toggle for 'Workout Reminders' is added, and the notificationsEnabled field is persisted to the backend. However, there are notable gaps: the motivational quotes in the Service Worker are hardcoded locally rather than fetched from the backend's existing random motivational message endpoint as required by REQ-15, and there is no automatic permission prompt on first login.",
+  "missing_requirements": [
     {
-      "description": "ProfileSetupModal with a 'Workout Reminders' notifications toggle switch in the UI",
-      "reason": "REQ-3 requires storing a notificationsEnabled field in the profile data model, but the build request explicitly lists push notifications as a non-goal ('not supported on this platform'). Surfacing a notifications toggle in the profile setup UI implies push notification support to the user, which was explicitly excluded.",
+      "id": "REQ-15",
+      "requirement": "Each notification should include a motivational quote fetched from the backend's existing random motivational message endpoint.",
+      "reason": "The Service Worker (sw.js) uses a hardcoded local array of motivational quotes (MOTIVATIONAL_QUOTES) rather than fetching from the backend's random motivational message endpoint. No bridge mechanism (e.g., main thread fetching a quote and passing it to the SW via postMessage) is implemented.",
       "evidence": [
-        "frontend/src/components/ProfileSetupModal.tsx"
+        "frontend/public/sw.js",
+        "frontend/src/utils/notificationService.ts"
       ]
     },
     {
-      "description": "7-day mini week overview panel on the Today's Workout screen",
-      "reason": "The TodaysWorkout page includes a 7-day mini week overview (referenced in the file summary). This was not requested as part of REQ-4 or REQ-7 and is extra functionality beyond what was specified for the Today screen.",
+      "id": "REQ-15",
+      "requirement": "On first login (or from a visible permission prompt in the app), the user is asked to grant notification permission.",
+      "reason": "There is no automatic permission prompt triggered on first login. The permission request is only triggered when the user manually toggles on 'Workout Reminders' in Settings.",
       "evidence": [
-        "frontend/src/pages/TodaysWorkout.tsx",
-        "frontend-file-summaries.txt"
+        "frontend/src/pages/Settings.tsx",
+        "frontend/src/hooks/useNotifications.ts"
       ]
     }
   ],
-  "confidence": 0.78,
+  "hallucinated_features": [
+    {
+      "description": "A 'Send Test Notification' feature (sendTestNotification) is exposed in the useNotifications hook and wired to the Settings page.",
+      "reason": "The build request does not mention a test notification button or functionality. This is an extra feature not requested.",
+      "evidence": [
+        "frontend/src/hooks/useNotifications.ts",
+        "frontend/public/sw.js",
+        "frontend/src/pages/Settings.tsx"
+      ]
+    },
+    {
+      "description": "A PWA web app manifest (manifest.json) was added enabling home screen installation.",
+      "reason": "The build request does not request a PWA manifest or home screen installation support.",
+      "evidence": [
+        "frontend/public/manifest.json",
+        "frontend/index.html"
+      ]
+    }
+  ],
+  "confidence": 0.8,
   "changed_files": [
-    "all_files_summary.json",
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/index.css",
     "frontend/index.html",
+    "frontend/public/manifest.json",
+    "frontend/public/sw.js",
     "frontend/src/App.tsx",
-    "frontend/src/components/AppLayout.tsx",
-    "frontend/src/components/AuthGuard.tsx",
-    "frontend/src/components/LoginButton.tsx",
-    "frontend/src/components/LoginScreen.tsx",
-    "frontend/src/components/ProfileSetupModal.tsx",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/pages/Progress.tsx",
-    "frontend/src/pages/Schedule.tsx",
-    "frontend/src/pages/TodaysWorkout.tsx",
-    "frontend/src/utils/urlParams.ts",
-    "frontend/tailwind.config.js",
+    "frontend/src/hooks/useNotifications.ts",
+    "frontend/src/pages/Settings.tsx",
+    "frontend/src/utils/notificationService.ts",
     "project_state.json"
   ]
 }

@@ -18,9 +18,19 @@ export type DayOfWeek = { 'tuesday' : null } |
   { 'friday' : null } |
   { 'monday' : null };
 export interface MotivationalMessage { 'id' : bigint, 'message' : string }
+export interface Tier { 'name' : string, 'index' : bigint }
+export interface TierProgressionResult {
+  'direction' : { 'up' : null } |
+    { 'down' : null } |
+    { 'same' : null },
+  'previousTier' : Tier,
+  'newTier' : Tier,
+}
 export interface UserProfile {
+  'lastEvaluatedWeek' : bigint,
   'notificationsEnabled' : boolean,
   'displayName' : string,
+  'currentTier' : bigint,
 }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -52,6 +62,18 @@ export interface _SERVICE {
    */
   'deleteWorkoutSchedule' : ActorMethod<[string], undefined>,
   /**
+   * / Evaluate and advance the caller's tier progression for a specific week.
+   * / Requires authenticated user.
+   */
+  'evaluateAndAdvanceTier' : ActorMethod<[bigint], TierProgressionResult>,
+  /**
+   * / Evaluate a specific user's tier progression for a specific week (admin-only).
+   */
+  'evaluateUserTierProgression' : ActorMethod<
+    [Principal, bigint, bigint],
+    TierProgressionResult
+  >,
+  /**
    * / Fetch all motivational messages. Available to all callers including guests.
    */
   'getAllMotivationalMessages' : ActorMethod<[], Array<MotivationalMessage>>,
@@ -73,6 +95,10 @@ export interface _SERVICE {
    */
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   /**
+   * / Get the caller's current tier without modifying it. Requires authenticated user.
+   */
+  'getUserTier' : ActorMethod<[], Tier>,
+  /**
    * / Returns all workout schedule entries owned by the caller.
    */
   'getWorkoutSchedules' : ActorMethod<[], Array<WorkoutScheduleEntry>>,
@@ -82,11 +108,18 @@ export interface _SERVICE {
   'isAdmin' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   /**
+   * / Only for backwards compatibility with the original model (Motoko allows
+   * / for null queries). This method should be preferred over getting the
+   * / profile directly.
+   */
+  'isNotificationsEnabled' : ActorMethod<[], boolean>,
+  /**
    * / Mark a specific workout as complete or incomplete. Only the owner may do this.
    */
   'markWorkoutComplete' : ActorMethod<[string, boolean], undefined>,
   /**
    * / Save (upsert) the caller's own profile. Requires authenticated user.
+   * / Preserves existing tier and lastEvaluatedWeek data to prevent users from resetting their tier.
    */
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
 }

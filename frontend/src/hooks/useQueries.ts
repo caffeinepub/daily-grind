@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { WorkoutScheduleEntry, UserProfile } from '../backend';
+import type { WorkoutScheduleEntry, UserProfile, Tier, TierProgressionResult } from '../backend';
+import { useInternetIdentity } from './useInternetIdentity';
 
 // ── Workout Schedules ──────────────────────────────────────────────────────
 
@@ -110,6 +111,40 @@ export function useSaveCallerUserProfile() {
       return actor.saveCallerUserProfile(profile);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+    },
+  });
+}
+
+// ── Tier System ────────────────────────────────────────────────────────────
+
+export function useUserTier() {
+  const { actor, isFetching: actorFetching } = useActor();
+  const { identity } = useInternetIdentity();
+  const isAuthenticated = !!identity;
+
+  return useQuery<Tier>({
+    queryKey: ['userTier'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getUserTier();
+    },
+    enabled: !!actor && !actorFetching && isAuthenticated,
+    retry: false,
+  });
+}
+
+export function useEvaluateTier() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation<TierProgressionResult, Error, bigint>({
+    mutationFn: async (weekNumber: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.evaluateAndAdvanceTier(weekNumber);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userTier'] });
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
     },
   });
