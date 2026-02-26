@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-in-frontend-public-sw-js-change-the-repeating-notification-interval-from-every-6-hours-6-60-60-1000-ms-to-every-4-hours-4-60-60-1000-ms-update-the-setinterval-call-and-any-related-comments-or-constants-that-reference-the-6-hour-schedule",
-      "featureTitle": "In `frontend/public/sw.js`, change the repeating notification interval from every 6 hours (6 * 60 * 60 * 1000 ms) to every 4 hours (4 * 60 * 60 * 1000 ms). Update the setInterval call and any related comments or constants that reference the 6-hour schedule.",
+      "featureId": "feature-update-the-schedule-page-frontend-src-pages-schedule-tsx-so-that-when-a-user-creates-or-edits-a-workout-entry-the-workout-details-section-renders-as-a-dynamic-list-of-set-row-inputs-instead-of-a-single-textarea-each-row-has-a-text-input-for-the-set-description-e-g-3x10-bench-press-users-can-add-new-rows-with-an-add-set-button-and-remove-existing-rows-with-a-delete-trash-icon-per-row-on-save-the-rows-are-persisted-to-the-backend-as-structured-set-rows-via-the-updated-mutation-hook",
+      "featureTitle": "Update the Schedule page (`frontend/src/pages/Schedule.tsx`) so that when a user creates or edits a workout entry, the workout details section renders as a dynamic list of set-row inputs instead of a single textarea. Each row has a text input for the set description (e.g., '3x10 Bench Press'). Users can add new rows with an '+ Add Set' button and remove existing rows with a delete/trash icon per row. On save, the rows are persisted to the backend as structured set rows via the updated mutation hook.",
       "files": [
-        "frontend/public/sw.js"
+        "frontend/src/pages/Schedule.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -16,7 +16,45 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-17"
+        "REQ-19"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-today-s-workout-page-frontend-src-pages-todaysworkout-tsx-to-render-the-workout-s-set-rows-as-a-vertical-checklist-each-set-row-is-displayed-as-a-row-with-a-checkbox-and-its-description-text-checking-a-checkbox-marks-that-individual-set-row-as-completed-and-persists-the-change-to-the-backend-completed-rows-are-visually-distinguished-e-g-strikethrough-text-and-a-muted-checked-style-consistent-with-the-app-s-dark-fitness-theme-if-the-entry-has-no-set-rows-fall-back-to-displaying-the-plain-workout-details-text-as-before",
+      "featureTitle": "Update the Today's Workout page (`frontend/src/pages/TodaysWorkout.tsx`) to render the workout's set rows as a vertical checklist. Each set row is displayed as a row with a checkbox and its description text. Checking a checkbox marks that individual set row as completed and persists the change to the backend. Completed rows are visually distinguished (e.g., strikethrough text and a muted/checked style consistent with the app's dark fitness theme). If the entry has no set rows, fall back to displaying the plain workout details text as before.",
+      "files": [
+        "frontend/src/pages/TodaysWorkout.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-20"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-or-update-react-query-hooks-in-frontend-src-hooks-usequeries-ts-to-support-set-row-operations-a-mutation-to-toggle-a-single-set-row-s-completed-status-by-schedule-entry-id-and-row-id-and-ensure-the-existing-schedule-query-is-invalidated-refetched-after-the-toggle-so-the-ui-stays-in-sync",
+      "featureTitle": "Add or update React Query hooks in `frontend/src/hooks/useQueries.ts` to support set-row operations: a mutation to toggle a single set row's completed status (by schedule entry ID and row ID), and ensure the existing schedule query is invalidated/refetched after the toggle so the UI stays in sync.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-21"
       ],
       "confidence": "high"
     }

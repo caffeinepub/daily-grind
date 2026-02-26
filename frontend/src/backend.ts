@@ -89,8 +89,9 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface WorkoutScheduleEntry {
+export interface WorkoutSchedule {
     workoutDetails: string;
+    setRows: Array<SetRow>;
     owner: Principal;
     dayOfWeek: DayOfWeek;
     completed: boolean;
@@ -101,6 +102,11 @@ export interface TierProgressionResult {
     direction: Variant_up_down_same;
     previousTier: Tier;
     newTier: Tier;
+}
+export interface SetRow {
+    id: bigint;
+    completed: boolean;
+    description: string;
 }
 export interface MotivationalMessage {
     id: bigint;
@@ -145,7 +151,7 @@ export interface backendInterface {
     /**
      * / Create or update a workout schedule entry. Only authenticated users may call this.
      */
-    createOrUpdateWorkoutSchedule(id: string, schedule: WorkoutScheduleEntry): Promise<void>;
+    createOrUpdateWorkoutSchedule(id: string, schedule: WorkoutSchedule): Promise<void>;
     /**
      * / Delete a workout schedule entry. Only the owner may delete their own entry.
      */
@@ -187,7 +193,7 @@ export interface backendInterface {
     /**
      * / Returns all workout schedule entries owned by the caller.
      */
-    getWorkoutSchedules(): Promise<Array<WorkoutScheduleEntry>>;
+    getWorkoutSchedules(): Promise<Array<WorkoutSchedule>>;
     /**
      * / Check whether the caller is an admin.
      */
@@ -200,6 +206,10 @@ export interface backendInterface {
      */
     isNotificationsEnabled(): Promise<boolean>;
     /**
+     * / Update a specific set row as complete or incomplete. Only the owner may do this.
+     */
+    markSetRowComplete(workoutId: string, rowId: bigint, completed: boolean): Promise<void>;
+    /**
      * / Mark a specific workout as complete or incomplete. Only the owner may do this.
      */
     markWorkoutComplete(id: string, completed: boolean): Promise<void>;
@@ -209,7 +219,7 @@ export interface backendInterface {
      */
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
 }
-import type { DayOfWeek as _DayOfWeek, Tier as _Tier, TierProgressionResult as _TierProgressionResult, UserProfile as _UserProfile, UserRole as _UserRole, WorkoutScheduleEntry as _WorkoutScheduleEntry } from "./declarations/backend.did.d.ts";
+import type { DayOfWeek as _DayOfWeek, SetRow as _SetRow, Tier as _Tier, TierProgressionResult as _TierProgressionResult, UserProfile as _UserProfile, UserRole as _UserRole, WorkoutSchedule as _WorkoutSchedule } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -254,17 +264,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async createOrUpdateWorkoutSchedule(arg0: string, arg1: WorkoutScheduleEntry): Promise<void> {
+    async createOrUpdateWorkoutSchedule(arg0: string, arg1: WorkoutSchedule): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.createOrUpdateWorkoutSchedule(arg0, to_candid_WorkoutScheduleEntry_n3(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.createOrUpdateWorkoutSchedule(arg0, to_candid_WorkoutSchedule_n3(this._uploadFile, this._downloadFile, arg1));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createOrUpdateWorkoutSchedule(arg0, to_candid_WorkoutScheduleEntry_n3(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.createOrUpdateWorkoutSchedule(arg0, to_candid_WorkoutSchedule_n3(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
@@ -408,7 +418,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getWorkoutSchedules(): Promise<Array<WorkoutScheduleEntry>> {
+    async getWorkoutSchedules(): Promise<Array<WorkoutSchedule>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getWorkoutSchedules();
@@ -464,6 +474,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async markSetRowComplete(arg0: string, arg1: bigint, arg2: boolean): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.markSetRowComplete(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.markSetRowComplete(arg0, arg1, arg2);
+            return result;
+        }
+    }
     async markWorkoutComplete(arg0: string, arg1: boolean): Promise<void> {
         if (this.processError) {
             try {
@@ -502,7 +526,7 @@ function from_candid_TierProgressionResult_n7(_uploadFile: (file: ExternalBlob) 
 function from_candid_UserRole_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n12(_uploadFile, _downloadFile, value);
 }
-function from_candid_WorkoutScheduleEntry_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _WorkoutScheduleEntry): WorkoutScheduleEntry {
+function from_candid_WorkoutSchedule_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _WorkoutSchedule): WorkoutSchedule {
     return from_candid_record_n15(_uploadFile, _downloadFile, value);
 }
 function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
@@ -513,6 +537,7 @@ function from_candid_opt_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 }
 function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     workoutDetails: string;
+    setRows: Array<_SetRow>;
     owner: Principal;
     dayOfWeek: _DayOfWeek;
     completed: boolean;
@@ -520,6 +545,7 @@ function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uin
     workoutName: string;
 }): {
     workoutDetails: string;
+    setRows: Array<SetRow>;
     owner: Principal;
     dayOfWeek: DayOfWeek;
     completed: boolean;
@@ -528,6 +554,7 @@ function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } {
     return {
         workoutDetails: value.workoutDetails,
+        setRows: value.setRows,
         owner: value.owner,
         dayOfWeek: from_candid_DayOfWeek_n16(_uploadFile, _downloadFile, value.dayOfWeek),
         completed: value.completed,
@@ -591,8 +618,8 @@ function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): Variant_up_down_same {
     return "up" in value ? Variant_up_down_same.up : "down" in value ? Variant_up_down_same.down : "same" in value ? Variant_up_down_same.same : value;
 }
-function from_candid_vec_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_WorkoutScheduleEntry>): Array<WorkoutScheduleEntry> {
-    return value.map((x)=>from_candid_WorkoutScheduleEntry_n14(_uploadFile, _downloadFile, x));
+function from_candid_vec_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_WorkoutSchedule>): Array<WorkoutSchedule> {
+    return value.map((x)=>from_candid_WorkoutSchedule_n14(_uploadFile, _downloadFile, x));
 }
 function to_candid_DayOfWeek_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: DayOfWeek): _DayOfWeek {
     return to_candid_variant_n6(_uploadFile, _downloadFile, value);
@@ -600,11 +627,12 @@ function to_candid_DayOfWeek_n5(_uploadFile: (file: ExternalBlob) => Promise<Uin
 function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
-function to_candid_WorkoutScheduleEntry_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: WorkoutScheduleEntry): _WorkoutScheduleEntry {
+function to_candid_WorkoutSchedule_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: WorkoutSchedule): _WorkoutSchedule {
     return to_candid_record_n4(_uploadFile, _downloadFile, value);
 }
 function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     workoutDetails: string;
+    setRows: Array<SetRow>;
     owner: Principal;
     dayOfWeek: DayOfWeek;
     completed: boolean;
@@ -612,6 +640,7 @@ function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
     workoutName: string;
 }): {
     workoutDetails: string;
+    setRows: Array<_SetRow>;
     owner: Principal;
     dayOfWeek: _DayOfWeek;
     completed: boolean;
@@ -620,6 +649,7 @@ function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 } {
     return {
         workoutDetails: value.workoutDetails,
+        setRows: value.setRows,
         owner: value.owner,
         dayOfWeek: to_candid_DayOfWeek_n5(_uploadFile, _downloadFile, value.dayOfWeek),
         completed: value.completed,

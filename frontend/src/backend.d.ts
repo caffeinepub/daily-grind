@@ -7,8 +7,9 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface WorkoutScheduleEntry {
+export interface WorkoutSchedule {
     workoutDetails: string;
+    setRows: Array<SetRow>;
     owner: Principal;
     dayOfWeek: DayOfWeek;
     completed: boolean;
@@ -19,6 +20,11 @@ export interface TierProgressionResult {
     direction: Variant_up_down_same;
     previousTier: Tier;
     newTier: Tier;
+}
+export interface SetRow {
+    id: bigint;
+    completed: boolean;
+    description: string;
 }
 export interface MotivationalMessage {
     id: bigint;
@@ -62,7 +68,7 @@ export interface backendInterface {
     /**
      * / Create or update a workout schedule entry. Only authenticated users may call this.
      */
-    createOrUpdateWorkoutSchedule(id: string, schedule: WorkoutScheduleEntry): Promise<void>;
+    createOrUpdateWorkoutSchedule(id: string, schedule: WorkoutSchedule): Promise<void>;
     /**
      * / Delete a workout schedule entry. Only the owner may delete their own entry.
      */
@@ -104,7 +110,7 @@ export interface backendInterface {
     /**
      * / Returns all workout schedule entries owned by the caller.
      */
-    getWorkoutSchedules(): Promise<Array<WorkoutScheduleEntry>>;
+    getWorkoutSchedules(): Promise<Array<WorkoutSchedule>>;
     /**
      * / Check whether the caller is an admin.
      */
@@ -116,6 +122,10 @@ export interface backendInterface {
      * / profile directly.
      */
     isNotificationsEnabled(): Promise<boolean>;
+    /**
+     * / Update a specific set row as complete or incomplete. Only the owner may do this.
+     */
+    markSetRowComplete(workoutId: string, rowId: bigint, completed: boolean): Promise<void>;
     /**
      * / Mark a specific workout as complete or incomplete. Only the owner may do this.
      */

@@ -1,216 +1,311 @@
-import { useMemo } from 'react';
-import { Link } from '@tanstack/react-router';
-import { CheckCircle2, Circle, Calendar, Clock, Dumbbell, RefreshCw, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import {
+  useGetWorkoutSchedules,
+  useMarkWorkoutComplete,
+  useMarkSetRowComplete,
+  useGetRandomMotivationalMessage,
+} from '../hooks/useQueries';
+import { DayOfWeek, WorkoutSchedule } from '../backend';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useGetWorkoutSchedules, useMarkWorkoutComplete, useRandomMotivationalMessage } from '../hooks/useQueries';
-import { DayOfWeek, WorkoutScheduleEntry } from '../backend';
-import { useGetCallerUserProfile } from '../hooks/useQueries';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CheckCircle2, RefreshCw, Clock, Dumbbell, Flame, Calendar } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
-const DAY_MAP: Record<string, DayOfWeek> = {
-  sunday: DayOfWeek.sunday,
-  monday: DayOfWeek.monday,
-  tuesday: DayOfWeek.tuesday,
-  wednesday: DayOfWeek.wednesday,
-  thursday: DayOfWeek.thursday,
-  friday: DayOfWeek.friday,
-  saturday: DayOfWeek.saturday,
+const DAY_LABELS: Record<DayOfWeek, string> = {
+  [DayOfWeek.monday]: 'Monday',
+  [DayOfWeek.tuesday]: 'Tuesday',
+  [DayOfWeek.wednesday]: 'Wednesday',
+  [DayOfWeek.thursday]: 'Thursday',
+  [DayOfWeek.friday]: 'Friday',
+  [DayOfWeek.saturday]: 'Saturday',
+  [DayOfWeek.sunday]: 'Sunday',
 };
 
-const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const DAY_ORDER: DayOfWeek[] = [
+  DayOfWeek.monday,
+  DayOfWeek.tuesday,
+  DayOfWeek.wednesday,
+  DayOfWeek.thursday,
+  DayOfWeek.friday,
+  DayOfWeek.saturday,
+  DayOfWeek.sunday,
+];
 
 function getTodayDayOfWeek(): DayOfWeek {
-  const dayName = DAY_NAMES[new Date().getDay()];
-  return DAY_MAP[dayName];
+  const d = new Date().getDay();
+  const map: Record<number, DayOfWeek> = {
+    0: DayOfWeek.sunday,
+    1: DayOfWeek.monday,
+    2: DayOfWeek.tuesday,
+    3: DayOfWeek.wednesday,
+    4: DayOfWeek.thursday,
+    5: DayOfWeek.friday,
+    6: DayOfWeek.saturday,
+  };
+  return map[d];
 }
 
-function getTodayLabel(): string {
-  return DAY_NAMES[new Date().getDay()].charAt(0).toUpperCase() + DAY_NAMES[new Date().getDay()].slice(1);
+function getWorkoutId(schedule: WorkoutSchedule): string {
+  return `schedule-${schedule.dayOfWeek}`;
 }
 
-// Generate a stable ID for a workout entry based on day
-function getWorkoutId(entry: WorkoutScheduleEntry): string {
-  const dayName = Object.entries(DayOfWeek).find(([, v]) => v === entry.dayOfWeek)?.[0] || 'unknown';
-  return `${entry.owner.toString()}-${dayName}`;
+interface SetRowCheckboxProps {
+  workoutId: string;
+  rowId: bigint;
+  description: string;
+  completed: boolean;
+}
+
+function SetRowCheckbox({ workoutId, rowId, description, completed }: SetRowCheckboxProps) {
+  const markSetRow = useMarkSetRowComplete();
+  const [optimisticChecked, setOptimisticChecked] = useState<boolean | null>(null);
+
+  const isChecked = optimisticChecked !== null ? optimisticChecked : completed;
+
+  const handleChange = async (checked: boolean) => {
+    setOptimisticChecked(checked);
+    try {
+      await markSetRow.mutateAsync({ workoutId, rowId, completed: checked });
+    } catch {
+      // Revert on error
+      setOptimisticChecked(!checked);
+    }
+  };
+
+  return (
+    <div
+      className={`flex items-center gap-3 py-2 px-3 rounded-lg transition-all ${
+        isChecked ? 'bg-success/10' : 'bg-background/40 hover:bg-background/60'
+      }`}
+    >
+      <Checkbox
+        id={`row-${workoutId}-${rowId}`}
+        checked={isChecked}
+        onCheckedChange={(val) => handleChange(val === true)}
+        disabled={markSetRow.isPending}
+        className="border-border data-[state=checked]:bg-success data-[state=checked]:border-success"
+      />
+      <label
+        htmlFor={`row-${workoutId}-${rowId}`}
+        className={`text-sm cursor-pointer flex-1 transition-all ${
+          isChecked ? 'line-through text-muted-foreground opacity-60' : 'text-foreground'
+        }`}
+      >
+        {description}
+      </label>
+      {isChecked && <CheckCircle2 className="w-4 h-4 text-success shrink-0" />}
+    </div>
+  );
 }
 
 export default function TodaysWorkout() {
-  const { data: schedules, isLoading: schedulesLoading } = useGetWorkoutSchedules();
-  const { data: motivationalMsg, isLoading: msgLoading, refetch: refetchMsg } = useRandomMotivationalMessage();
-  const { data: userProfile } = useGetCallerUserProfile();
+  const today = getTodayDayOfWeek();
+  const { data: schedules = [], isLoading } = useGetWorkoutSchedules();
+  const { data: motivationalMessage, refetch: refetchMessage } = useGetRandomMotivationalMessage();
   const markComplete = useMarkWorkoutComplete();
+  const queryClient = useQueryClient();
 
-  const todayDayOfWeek = getTodayDayOfWeek();
-
-  const todayWorkout = useMemo(() => {
-    if (!schedules) return null;
-    return schedules.find((s) => s.dayOfWeek === todayDayOfWeek) || null;
-  }, [schedules, todayDayOfWeek]);
+  const todayEntry = schedules.find((s) => s.dayOfWeek === today) ?? null;
+  const hasSetRows = todayEntry?.setRows && todayEntry.setRows.length > 0;
 
   const handleToggleComplete = async () => {
-    if (!todayWorkout) return;
-    const id = getWorkoutId(todayWorkout);
-    await markComplete.mutateAsync({ id, completed: !todayWorkout.completed });
+    if (!todayEntry) return;
+    const id = getWorkoutId(todayEntry);
+    await markComplete.mutateAsync({ id, completed: !todayEntry.completed });
   };
 
-  const greeting = userProfile?.displayName ? `Hey, ${userProfile.displayName}!` : 'Hey, Athlete!';
+  const handleRefreshMessage = () => {
+    queryClient.removeQueries({ queryKey: ['randomMotivationalMessage'] });
+    refetchMessage();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
       {/* Header */}
       <div>
-        <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest">
-          {getTodayLabel()} · {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+        <h1 className="text-3xl font-display font-bold text-foreground tracking-tight">Today's Workout</h1>
+        <p className="text-muted-foreground mt-1">
+          {DAY_LABELS[today]} — {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
         </p>
-        <h1 className="text-3xl font-black mt-1">{greeting}</h1>
       </div>
 
       {/* Motivational Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30 p-5">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="relative">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Daily Fuel 🔥</p>
-          {msgLoading ? (
-            <Skeleton className="h-6 w-3/4 bg-primary/10" />
-          ) : (
-            <p className="text-lg font-bold text-foreground leading-snug">
-              "{motivationalMsg?.message || 'Push yourself because no one else is going to do it for you.'}"
-            </p>
-          )}
-          <button
-            onClick={() => refetchMsg()}
-            className="mt-3 flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary transition-colors font-semibold"
-          >
-            <RefreshCw size={12} />
-            New message
-          </button>
-        </div>
-      </div>
+      {motivationalMessage && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-4 px-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <Flame className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground italic">"{motivationalMessage.message}"</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
+                onClick={handleRefreshMessage}
+                title="New quote"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Today's Workout */}
-      <div>
-        <h2 className="text-lg font-black mb-3 flex items-center gap-2">
-          <Dumbbell size={18} className="text-primary" />
-          Today's Workout
-        </h2>
-
-        {schedulesLoading ? (
-          <Card className="bg-card border-border/40">
-            <CardContent className="p-6 space-y-3">
-              <Skeleton className="h-7 w-1/2 bg-muted" />
-              <Skeleton className="h-4 w-3/4 bg-muted" />
-              <Skeleton className="h-4 w-2/3 bg-muted" />
-              <Skeleton className="h-10 w-full bg-muted mt-4" />
-            </CardContent>
-          </Card>
-        ) : todayWorkout ? (
-          <Card className={`border-border/40 transition-all ${todayWorkout.completed ? 'bg-success/5 border-success/30' : 'bg-card'}`}>
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {todayWorkout.completed ? (
-                      <CheckCircle2 size={20} className="text-success flex-shrink-0" />
-                    ) : (
-                      <Circle size={20} className="text-muted-foreground flex-shrink-0" />
-                    )}
-                    <h3 className={`text-xl font-black truncate ${todayWorkout.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                      {todayWorkout.workoutName}
-                    </h3>
+      {/* Today's Workout Card */}
+      {todayEntry ? (
+        <Card className={`border transition-all ${todayEntry.completed ? 'border-success/50 shadow-[0_0_16px_rgba(0,200,100,0.15)]' : 'border-primary/40 shadow-glow'}`}>
+          <CardHeader className="pb-2 pt-5 px-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Dumbbell className="w-5 h-5 text-primary" />
+                  <CardTitle className="text-xl font-display font-bold text-foreground">
+                    {todayEntry.workoutName}
+                  </CardTitle>
+                </div>
+                {todayEntry.timeReminder && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    {todayEntry.timeReminder}
                   </div>
+                )}
+              </div>
+              {todayEntry.completed && (
+                <Badge className="bg-success/20 text-success border-success/30 gap-1 shrink-0">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Completed
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
 
-                  {todayWorkout.timeReminder && (
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3 ml-7">
-                      <Clock size={13} />
-                      <span>{todayWorkout.timeReminder}</span>
-                    </div>
-                  )}
-
-                  <p className="text-sm text-muted-foreground leading-relaxed ml-7">
-                    {todayWorkout.workoutDetails}
-                  </p>
+          <CardContent className="px-5 pb-5 space-y-4">
+            {/* Set rows checklist */}
+            {hasSetRows ? (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                  Sets & Exercises
+                </p>
+                <div className="space-y-1 rounded-xl overflow-hidden border border-border/50">
+                  {todayEntry.setRows.map((row) => (
+                    <SetRowCheckbox
+                      key={String(row.id)}
+                      workoutId={getWorkoutId(todayEntry)}
+                      rowId={row.id}
+                      description={row.description}
+                      completed={row.completed}
+                    />
+                  ))}
+                </div>
+                {/* Progress indicator */}
+                <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
+                  <span>
+                    {todayEntry.setRows.filter((r) => r.completed).length} / {todayEntry.setRows.length} sets done
+                  </span>
+                  <span className="text-primary font-medium">
+                    {Math.round((todayEntry.setRows.filter((r) => r.completed).length / todayEntry.setRows.length) * 100)}%
+                  </span>
                 </div>
               </div>
+            ) : todayEntry.workoutDetails ? (
+              /* Fallback: plain text details */
+              <p className="text-sm text-muted-foreground leading-relaxed">{todayEntry.workoutDetails}</p>
+            ) : null}
 
-              <Button
-                onClick={handleToggleComplete}
-                disabled={markComplete.isPending}
-                className={`w-full mt-5 font-bold ${
-                  todayWorkout.completed
-                    ? 'bg-success/15 text-success border border-success/30 hover:bg-success/25'
-                    : 'btn-primary'
+            {/* Mark complete button */}
+            <Button
+              className={`w-full font-semibold transition-all ${
+                todayEntry.completed
+                  ? 'bg-success/20 text-success border border-success/30 hover:bg-success/30'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              }`}
+              onClick={handleToggleComplete}
+              disabled={markComplete.isPending}
+            >
+              {markComplete.isPending ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                  Updating…
+                </span>
+              ) : todayEntry.completed ? (
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Mark as Incomplete
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Mark Workout Complete
+                </span>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-border bg-card">
+          <CardContent className="py-12 text-center space-y-3">
+            <Dumbbell className="w-12 h-12 text-muted-foreground/30 mx-auto" />
+            <p className="text-muted-foreground">No workout scheduled for today.</p>
+            <p className="text-sm text-muted-foreground/60">Head to the Schedule page to add one!</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Week Overview */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Calendar className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">This Week</h2>
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {DAY_ORDER.map((day) => {
+            const entry = schedules.find((s) => s.dayOfWeek === day);
+            const isToday = day === today;
+            return (
+              <div
+                key={day}
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg text-center transition-all ${
+                  isToday
+                    ? 'bg-primary/10 border border-primary/30'
+                    : 'bg-card border border-border/50'
                 }`}
-                variant={todayWorkout.completed ? 'outline' : 'default'}
               >
-                {markComplete.isPending ? (
-                  <Loader2 size={16} className="animate-spin mr-2" />
-                ) : todayWorkout.completed ? (
-                  '✅ Completed! Tap to undo'
-                ) : (
-                  '✅ Mark as Completed'
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="bg-card border-border/40 border-dashed">
-            <CardContent className="p-8 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                <Calendar size={24} className="text-muted-foreground" />
-              </div>
-              <h3 className="font-bold text-foreground mb-1">Rest Day 😴</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                No workout scheduled for {getTodayLabel()}. Enjoy your rest or add one!
-              </p>
-              <Link to="/schedule">
-                <Button variant="outline" size="sm" className="border-primary/40 text-primary hover:bg-primary/10">
-                  Add Today's Workout
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Quick Week Overview */}
-      {schedules && schedules.length > 0 && (
-        <div>
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">This Week</h2>
-          <div className="grid grid-cols-7 gap-1">
-            {DAY_NAMES.map((day) => {
-              const dayEnum = DAY_MAP[day];
-              const workout = schedules.find((s) => s.dayOfWeek === dayEnum);
-              const isToday = dayEnum === todayDayOfWeek;
-              const shortDay = day.slice(0, 1).toUpperCase();
-
-              return (
+                <span className={`text-xs font-medium ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                  {DAY_LABELS[day].slice(0, 3)}
+                </span>
                 <div
-                  key={day}
-                  className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-                    isToday ? 'bg-primary/15 border border-primary/30' : 'bg-card border border-border/30'
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    entry?.completed
+                      ? 'bg-success/20'
+                      : entry
+                      ? 'bg-primary/20'
+                      : 'bg-muted/30'
                   }`}
                 >
-                  <span className={`text-xs font-bold ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
-                    {shortDay}
-                  </span>
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      workout?.completed
-                        ? 'bg-success'
-                        : workout
-                        ? isToday
-                          ? 'bg-primary'
-                          : 'bg-muted-foreground/40'
-                        : 'bg-transparent border border-border/40'
-                    }`}
-                  />
+                  {entry?.completed ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                  ) : entry ? (
+                    <Dumbbell className="w-3 h-3 text-primary/60" />
+                  ) : (
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                  )}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }

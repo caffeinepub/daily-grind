@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
+  "projectStateVersion": 11,
   "summary": "Building 'Daily Grind' — a daily workout reminder app with weekly workout schedule, today's workout view, mark-as-completed, motivational messages, progress tracking, and user authentication.",
   "architectural_notes": [
     "Three data tables: Workout Schedule, Motivation Messages, User",
@@ -105,6 +105,30 @@
         "REQ-17"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-the-schedule-page-frontend-src-pages-schedule-tsx-so-that-when-a-user-creates-or-edits-a-workout-entry-the-workout-details-section-renders-as-a-dynamic-list-of-set-row-inputs-instead-of-a-single-textarea-each-row-has-a-text-input-for-the-set-description-e-g-3x10-bench-press-users-can-add-new-rows-with-an-add-set-button-and-remove-existing-rows-with-a-delete-trash-icon-per-row-on-save-the-rows-are-persisted-to-the-backend-as-structured-set-rows-via-the-updated-mutation-hook",
+      "title": "Update the Schedule page (`frontend/src/pages/Schedule.tsx`) so that when a user creates or edits a workout entry, the workout details section renders as a dynamic list of set-row inputs instead of a single textarea. Each row has a text input for the set description (e.g., '3x10 Bench Press'). Users can add new rows with an '+ Add Set' button and remove existing rows with a delete/trash icon per row. On save, the rows are persisted to the backend as structured set rows via the updated mutation hook.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-today-s-workout-page-frontend-src-pages-todaysworkout-tsx-to-render-the-workout-s-set-rows-as-a-vertical-checklist-each-set-row-is-displayed-as-a-row-with-a-checkbox-and-its-description-text-checking-a-checkbox-marks-that-individual-set-row-as-completed-and-persists-the-change-to-the-backend-completed-rows-are-visually-distinguished-e-g-strikethrough-text-and-a-muted-checked-style-consistent-with-the-app-s-dark-fitness-theme-if-the-entry-has-no-set-rows-fall-back-to-displaying-the-plain-workout-details-text-as-before",
+      "title": "Update the Today's Workout page (`frontend/src/pages/TodaysWorkout.tsx`) to render the workout's set rows as a vertical checklist. Each set row is displayed as a row with a checkbox and its description text. Checking a checkbox marks that individual set row as completed and persists the change to the backend. Completed rows are visually distinguished (e.g., strikethrough text and a muted/checked style consistent with the app's dark fitness theme). If the entry has no set rows, fall back to displaying the plain workout details text as before.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-or-update-react-query-hooks-in-frontend-src-hooks-usequeries-ts-to-support-set-row-operations-a-mutation-to-toggle-a-single-set-row-s-completed-status-by-schedule-entry-id-and-row-id-and-ensure-the-existing-schedule-query-is-invalidated-refetched-after-the-toggle-so-the-ui-stays-in-sync",
+      "title": "Add or update React Query hooks in `frontend/src/hooks/useQueries.ts` to support set-row operations: a mutation to toggle a single set row's completed status (by schedule entry ID and row ID), and ensure the existing schedule query is invalidated/refetched after the toggle so the UI stays in sync.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -206,6 +230,20 @@
       "id": "AR-15",
       "summary": "Change notification reminder interval from every 6 hours to every 4 hours",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Workout description supports structured rows (sets/exercises) that can be individually checked off as completed during a workout session",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Extend the workout schedule backend data model so that each schedule entry's workout details field supports an array of structured set rows. Each set row must have a unique ID, a text description (e.g., '3x10 Bench Press'), and a completed boolean. Update the `WorkoutSchedule` type and all relevant CRUD API functions (`createScheduleEntry`, `updateScheduleEntry`, `getScheduleForUser`) to accept and return set rows. The existing plain-text `workoutDetails` field must remain backward-compatible (entries without set rows continue to work).",
+      "reqIds": [
+        "REQ-18"
+      ],
       "status": "pending"
     }
   ],

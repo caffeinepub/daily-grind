@@ -1,20 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { WorkoutScheduleEntry, UserProfile, Tier, TierProgressionResult } from '../backend';
-import { useInternetIdentity } from './useInternetIdentity';
-
-// ── Workout Schedules ──────────────────────────────────────────────────────
+import type { WorkoutSchedule, UserProfile } from '../backend';
 
 export function useGetWorkoutSchedules() {
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, isFetching } = useActor();
 
-  return useQuery<WorkoutScheduleEntry[]>({
+  return useQuery<WorkoutSchedule[]>({
     queryKey: ['workoutSchedules'],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getWorkoutSchedules();
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -23,24 +20,9 @@ export function useCreateOrUpdateWorkoutSchedule() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, schedule }: { id: string; schedule: WorkoutScheduleEntry }) => {
+    mutationFn: async ({ id, schedule }: { id: string; schedule: WorkoutSchedule }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.createOrUpdateWorkoutSchedule(id, schedule);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
-    },
-  });
-}
-
-export function useMarkWorkoutComplete() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.markWorkoutComplete(id, completed);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
@@ -63,10 +45,46 @@ export function useDeleteWorkoutSchedule() {
   });
 }
 
-// ── Motivational Messages ──────────────────────────────────────────────────
+export function useMarkWorkoutComplete() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
 
-export function useRandomMotivationalMessage() {
-  const { actor, isFetching: actorFetching } = useActor();
+  return useMutation({
+    mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.markWorkoutComplete(id, completed);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
+    },
+  });
+}
+
+export function useMarkSetRowComplete() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      workoutId,
+      rowId,
+      completed,
+    }: {
+      workoutId: string;
+      rowId: bigint;
+      completed: boolean;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.markSetRowComplete(workoutId, rowId, completed);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
+    },
+  });
+}
+
+export function useGetRandomMotivationalMessage() {
+  const { actor, isFetching } = useActor();
 
   return useQuery({
     queryKey: ['randomMotivationalMessage'],
@@ -74,12 +92,9 @@ export function useRandomMotivationalMessage() {
       if (!actor) return null;
       return actor.getRandomMotivationalMessage();
     },
-    enabled: !!actor && !actorFetching,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!actor && !isFetching,
   });
 }
-
-// ── User Profile ───────────────────────────────────────────────────────────
 
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
@@ -116,21 +131,16 @@ export function useSaveCallerUserProfile() {
   });
 }
 
-// ── Tier System ────────────────────────────────────────────────────────────
-
 export function useUserTier() {
-  const { actor, isFetching: actorFetching } = useActor();
-  const { identity } = useInternetIdentity();
-  const isAuthenticated = !!identity;
+  const { actor, isFetching } = useActor();
 
-  return useQuery<Tier>({
+  return useQuery({
     queryKey: ['userTier'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return null;
       return actor.getUserTier();
     },
-    enabled: !!actor && !actorFetching && isAuthenticated,
-    retry: false,
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -138,7 +148,7 @@ export function useEvaluateTier() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
-  return useMutation<TierProgressionResult, Error, bigint>({
+  return useMutation({
     mutationFn: async (weekNumber: bigint) => {
       if (!actor) throw new Error('Actor not available');
       return actor.evaluateAndAdvanceTier(weekNumber);

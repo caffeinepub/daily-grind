@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress as ProgressBar } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGetWorkoutSchedules, useGetCallerUserProfile, useUserTier } from '../hooks/useQueries';
-import { DayOfWeek, WorkoutScheduleEntry } from '../backend';
+import { DayOfWeek, WorkoutSchedule } from '../backend';
 import TierBadge from '../components/TierBadge';
 
 const DAYS_ORDER: { label: string; short: string; value: DayOfWeek }[] = [
@@ -23,7 +23,7 @@ function getTodayDayOfWeek(): DayOfWeek {
   return DayOfWeek[dayName as keyof typeof DayOfWeek];
 }
 
-function calculateStreak(schedules: WorkoutScheduleEntry[]): number {
+function calculateStreak(schedules: WorkoutSchedule[]): number {
   const todayIndex = DAYS_ORDER.findIndex((d) => d.value === getTodayDayOfWeek());
   let streak = 0;
 
@@ -40,7 +40,7 @@ function calculateStreak(schedules: WorkoutScheduleEntry[]): number {
   return streak;
 }
 
-function calculateWeeklyProgress(schedules: WorkoutScheduleEntry[]): {
+function calculateWeeklyProgress(schedules: WorkoutSchedule[]): {
   completed: number;
   total: number;
   percentage: number;
@@ -66,7 +66,7 @@ export default function Progress() {
   }, [schedules]);
 
   const workoutsByDay = useMemo(() => {
-    const map: Partial<Record<DayOfWeek, WorkoutScheduleEntry>> = {};
+    const map: Partial<Record<DayOfWeek, WorkoutSchedule>> = {};
     if (schedules) {
       schedules.forEach((s) => {
         map[s.dayOfWeek] = s;
@@ -88,7 +88,7 @@ export default function Progress() {
           </p>
         </div>
         {tier && (
-          <TierBadge tier={tier} variant="compact" className="mt-1 flex-shrink-0" />
+          <TierBadge tier={tier} variant="compact" className="mt-1 shrink-0" />
         )}
       </div>
 
@@ -202,7 +202,7 @@ export default function Progress() {
                 >
                   {/* Status Icon */}
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                       workout?.completed
                         ? 'bg-success/20'
                         : workout
@@ -241,7 +241,7 @@ export default function Progress() {
                   {/* Completion Badge */}
                   {workout && (
                     <span
-                      className={`text-xs font-bold px-2 py-1 rounded-md flex-shrink-0 ${
+                      className={`text-xs font-bold px-2 py-1 rounded-md shrink-0 ${
                         workout.completed
                           ? 'bg-success/15 text-success'
                           : 'bg-muted text-muted-foreground'

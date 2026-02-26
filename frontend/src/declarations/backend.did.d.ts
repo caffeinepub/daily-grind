@@ -18,6 +18,11 @@ export type DayOfWeek = { 'tuesday' : null } |
   { 'friday' : null } |
   { 'monday' : null };
 export interface MotivationalMessage { 'id' : bigint, 'message' : string }
+export interface SetRow {
+  'id' : bigint,
+  'completed' : boolean,
+  'description' : string,
+}
 export interface Tier { 'name' : string, 'index' : bigint }
 export interface TierProgressionResult {
   'direction' : { 'up' : null } |
@@ -35,8 +40,9 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
-export interface WorkoutScheduleEntry {
+export interface WorkoutSchedule {
   'workoutDetails' : string,
+  'setRows' : Array<SetRow>,
   'owner' : Principal,
   'dayOfWeek' : DayOfWeek,
   'completed' : boolean,
@@ -54,7 +60,7 @@ export interface _SERVICE {
    * / Create or update a workout schedule entry. Only authenticated users may call this.
    */
   'createOrUpdateWorkoutSchedule' : ActorMethod<
-    [string, WorkoutScheduleEntry],
+    [string, WorkoutSchedule],
     undefined
   >,
   /**
@@ -101,7 +107,7 @@ export interface _SERVICE {
   /**
    * / Returns all workout schedule entries owned by the caller.
    */
-  'getWorkoutSchedules' : ActorMethod<[], Array<WorkoutScheduleEntry>>,
+  'getWorkoutSchedules' : ActorMethod<[], Array<WorkoutSchedule>>,
   /**
    * / Check whether the caller is an admin.
    */
@@ -113,6 +119,10 @@ export interface _SERVICE {
    * / profile directly.
    */
   'isNotificationsEnabled' : ActorMethod<[], boolean>,
+  /**
+   * / Update a specific set row as complete or incomplete. Only the owner may do this.
+   */
+  'markSetRowComplete' : ActorMethod<[string, bigint, boolean], undefined>,
   /**
    * / Mark a specific workout as complete or incomplete. Only the owner may do this.
    */

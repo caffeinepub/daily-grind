@@ -4,13 +4,13 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Principal "mo:core/Principal";
 import Nat "mo:core/Nat";
-import Order "mo:core/Order";
 import Iter "mo:core/Iter";
-
+import Order "mo:core/Order";
+import Migration "migration";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-
+(with migration = Migration.run)
 actor {
   /// Types
   public type DayOfWeek = {
@@ -23,17 +23,24 @@ actor {
     #sunday;
   };
 
-  public type WorkoutScheduleEntry = {
+  public type SetRow = {
+    id : Nat;
+    description : Text;
+    completed : Bool;
+  };
+
+  public type WorkoutSchedule = {
     dayOfWeek : DayOfWeek;
     workoutName : Text;
     workoutDetails : Text;
     timeReminder : ?Text;
     completed : Bool;
+    setRows : [SetRow];
     owner : Principal;
   };
 
-  module WorkoutScheduleEntry {
-    public func compare(entry1 : WorkoutScheduleEntry, entry2 : WorkoutScheduleEntry) : Order.Order {
+  module WorkoutSchedule {
+    public func compare(entry1 : WorkoutSchedule, entry2 : WorkoutSchedule) : Order.Order {
       switch (Text.compare(entry1.workoutName, entry2.workoutName)) {
         case (#equal) { Text.compare(entry1.workoutDetails, entry2.workoutDetails) };
         case (order) { order };
@@ -64,7 +71,7 @@ actor {
     direction : { #up; #down; #same };
   };
 
-  /// Tier constant
+  /// Tier constant (TODO: Move to JS)
   let tiers : [Tier] = [
     { index = 0; name = "Dirt 1" },
     { index = 1; name = "Dirt 2" },
@@ -95,7 +102,7 @@ actor {
   include MixinAuthorization(accessControlState);
 
   /// Persistent state
-  let workoutSchedules = Map.empty<Text, WorkoutScheduleEntry>();
+  let workoutSchedules = Map.empty<Text, WorkoutSchedule>();
   let motivationalMessages = Map.empty<Nat, MotivationalMessage>();
   let userProfiles = Map.empty<Principal, UserProfile>();
 
@@ -131,23 +138,24 @@ actor {
   // ── Workout Schedules API ──────────────────────────────────────────────────
 
   /// Create or update a workout schedule entry. Only authenticated users may call this.
-  public shared ({ caller }) func createOrUpdateWorkoutSchedule(id : Text, schedule : WorkoutScheduleEntry) : async () {
+  public shared ({ caller }) func createOrUpdateWorkoutSchedule(id : Text, schedule : WorkoutSchedule) : async () {
     if (not callerHasUserRole(caller)) {
       Runtime.trap("Unauthorized: Only users can create or update workout schedules");
     };
-    let newSchedule : WorkoutScheduleEntry = {
+    let newSchedule : WorkoutSchedule = {
       dayOfWeek = schedule.dayOfWeek;
       workoutName = schedule.workoutName;
       workoutDetails = schedule.workoutDetails;
       timeReminder = schedule.timeReminder;
       completed = schedule.completed;
+      setRows = schedule.setRows;
       owner = caller;
     };
     workoutSchedules.add(id, newSchedule);
   };
 
   /// Returns all workout schedule entries owned by the caller.
-  public query ({ caller }) func getWorkoutSchedules() : async [WorkoutScheduleEntry] {
+  public query ({ caller }) func getWorkoutSchedules() : async [WorkoutSchedule] {
     if (not callerHasUserRole(caller)) {
       Runtime.trap("Unauthorized: Only users can view workout schedules");
     };
@@ -165,15 +173,40 @@ actor {
         if (caller != entry.owner) {
           Runtime.trap("Unauthorized: Only the owner can mark this workout as complete");
         };
-        let updatedEntry : WorkoutScheduleEntry = {
+        let updatedEntry : WorkoutSchedule = {
           dayOfWeek = entry.dayOfWeek;
           workoutName = entry.workoutName;
           workoutDetails = entry.workoutDetails;
           timeReminder = entry.timeReminder;
           completed = completed;
+          setRows = entry.setRows;
           owner = entry.owner;
         };
         workoutSchedules.add(id, updatedEntry);
+      };
+    };
+  };
+
+  /// Update a specific set row as complete or incomplete. Only the owner may do this.
+  public shared ({ caller }) func markSetRowComplete(workoutId : Text, rowId : Nat, completed : Bool) : async () {
+    if (not callerHasUserRole(caller)) {
+      Runtime.trap("Unauthorized: Only users can mark workout sets as complete");
+    };
+    switch (workoutSchedules.get(workoutId)) {
+      case (null) { Runtime.trap("Workout not found") };
+      case (?workout) {
+        if (workout.owner != caller) {
+          Runtime.trap("Unauthorized: Only the owner can mark workout sets as complete");
+        };
+        let updatedRows = workout.setRows.map(
+          func(row) {
+            if (row.id == rowId) { { row with completed } } else { row };
+          }
+        );
+        let updatedWorkout : WorkoutSchedule = {
+          workout with setRows = updatedRows
+        };
+        workoutSchedules.add(workoutId, updatedWorkout);
       };
     };
   };

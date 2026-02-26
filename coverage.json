@@ -1,34 +1,74 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T05:35:06.406Z",
+  "generatedAt": "2026-02-26T01:52:31.764Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 4,
+    "implemented": 3,
     "items": [
       {
-        "id": "REQ-17",
-        "summary": "In `frontend/public/sw.js`, change the repeating notification interval from every 6 hours (6 * 60 * 60 * 1000 ms) to every 4 hours (4 * 60 * 60 * 1000 ms). Update the setInterval call and any related comments or constants that reference the 6-hour schedule.",
+        "id": "REQ-18",
+        "summary": "Extend the workout schedule backend data model so that each schedule entry's workout details field supports an array of structured set rows. Each set row must have a unique ID, a text description (e.g., '3x10 Bench Press'), and a completed boolean. Update the `WorkoutSchedule` type and all relevant CRUD API functions (`createScheduleEntry`, `updateScheduleEntry`, `getScheduleForUser`) to accept and return set rows. The existing plain-text `workoutDetails` field must remain backward-compatible (entries without set rows continue to work).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-19",
+        "summary": "Update the Schedule page (`frontend/src/pages/Schedule.tsx`) so that when a user creates or edits a workout entry, the workout details section renders as a dynamic list of set-row inputs instead of a single textarea. Each row has a text input for the set description (e.g., '3x10 Bench Press'). Users can add new rows with an '+ Add Set' button and remove existing rows with a delete/trash icon per row. On save, the rows are persisted to the backend as structured set rows via the updated mutation hook.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/public/sw.js"
+          "frontend/src/pages/Schedule.tsx"
         ],
         "matchedFiles": [
-          "frontend/public/sw.js"
+          "frontend/src/pages/Schedule.tsx"
+        ]
+      },
+      {
+        "id": "REQ-20",
+        "summary": "Update the Today's Workout page (`frontend/src/pages/TodaysWorkout.tsx`) to render the workout's set rows as a vertical checklist. Each set row is displayed as a row with a checkbox and its description text. Checking a checkbox marks that individual set row as completed and persists the change to the backend. Completed rows are visually distinguished (e.g., strikethrough text and a muted/checked style consistent with the app's dark fitness theme). If the entry has no set rows, fall back to displaying the plain workout details text as before.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/TodaysWorkout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/TodaysWorkout.tsx"
+        ]
+      },
+      {
+        "id": "REQ-21",
+        "summary": "Add or update React Query hooks in `frontend/src/hooks/useQueries.ts` to support set-row operations: a mutation to toggle a single set row's completed status (by schedule entry ID and row ID), and ensure the existing schedule query is invalidated/refetched after the toggle so the UI stays in sync.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
+    "build-template/README.md",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/public/sw.js",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/Progress.tsx",
+    "frontend/src/pages/Schedule.tsx",
+    "frontend/src/pages/TodaysWorkout.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

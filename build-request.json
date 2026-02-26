@@ -1,36 +1,97 @@
 {
   "kind": "build_request",
-  "title": "Change notification reminder interval from 6 hours to 4 hours",
+  "title": "Structured set rows in workout description with per-row check-off",
   "projectName": "Daily Grind",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-17",
-      "text": "In `frontend/public/sw.js`, change the repeating notification interval from every 6 hours (6 * 60 * 60 * 1000 ms) to every 4 hours (4 * 60 * 60 * 1000 ms). Update the setInterval call and any related comments or constants that reference the 6-hour schedule.",
-      "target": "frontend",
+      "id": "REQ-18",
+      "text": "Extend the workout schedule backend data model so that each schedule entry's workout details field supports an array of structured set rows. Each set row must have a unique ID, a text description (e.g., '3x10 Bench Press'), and a completed boolean. Update the `WorkoutSchedule` type and all relevant CRUD API functions (`createScheduleEntry`, `updateScheduleEntry`, `getScheduleForUser`) to accept and return set rows. The existing plain-text `workoutDetails` field must remain backward-compatible (entries without set rows continue to work).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "can you change the remind notification setting from every 6 hours to every 4 hours"
+          "in the description of the workout people set they can put it in column rows that can also be checked off after they finish their set"
         ]
       },
       "acceptanceCriteria": [
-        "The service worker `sw.js` uses a 4-hour interval (14,400,000 ms) for the repeating notification schedule instead of 6 hours.",
-        "No references to the old 6-hour interval remain in `sw.js`.",
-        "The notification still fires correctly when started, sending a reminder with a motivational quote."
+        "The WorkoutSchedule type includes an optional array of set rows, each with an id, description text, and a completed boolean.",
+        "createScheduleEntry and updateScheduleEntry accept set rows in the payload.",
+        "getScheduleForUser returns set rows with their current completed state.",
+        "Entries that have no set rows still load correctly with no regressions.",
+        "A new backend function (or extension of updateScheduleEntry) allows toggling the completed state of an individual set row by its ID within a schedule entry."
+      ]
+    },
+    {
+      "id": "REQ-19",
+      "text": "Update the Schedule page (`frontend/src/pages/Schedule.tsx`) so that when a user creates or edits a workout entry, the workout details section renders as a dynamic list of set-row inputs instead of a single textarea. Each row has a text input for the set description (e.g., '3x10 Bench Press'). Users can add new rows with an '+ Add Set' button and remove existing rows with a delete/trash icon per row. On save, the rows are persisted to the backend as structured set rows via the updated mutation hook.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "in the description of the workout people set they can put it in column rows that can also be checked off after they finish their set"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The Schedule edit form shows workout details as a column of individual set-row text inputs rather than a plain textarea.",
+        "An '+ Add Set' button appends a new empty row to the list.",
+        "Each row has a remove button that deletes that row from the local list.",
+        "Saving the form persists all set rows to the backend.",
+        "Existing entries that had plain-text details are displayed gracefully (e.g., shown as a single pre-filled row).",
+        "Row order is preserved after save and reload."
+      ]
+    },
+    {
+      "id": "REQ-20",
+      "text": "Update the Today's Workout page (`frontend/src/pages/TodaysWorkout.tsx`) to render the workout's set rows as a vertical checklist. Each set row is displayed as a row with a checkbox and its description text. Checking a checkbox marks that individual set row as completed and persists the change to the backend. Completed rows are visually distinguished (e.g., strikethrough text and a muted/checked style consistent with the app's dark fitness theme). If the entry has no set rows, fall back to displaying the plain workout details text as before.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "column rows that can also be checked off after they finish their set"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Today's Workout page shows each set row as a checkbox row with description text.",
+        "Clicking a checkbox immediately updates its visual state and calls the backend to persist the completed status for that specific row.",
+        "Completed rows show a visible completed style (strikethrough or dimmed text with a checked checkbox).",
+        "Unchecking a completed row marks it incomplete and persists the change.",
+        "If the workout entry has no structured set rows, the plain workoutDetails text is displayed as a fallback.",
+        "The checklist styling matches the existing dark, high-energy fitness theme."
+      ]
+    },
+    {
+      "id": "REQ-21",
+      "text": "Add or update React Query hooks in `frontend/src/hooks/useQueries.ts` to support set-row operations: a mutation to toggle a single set row's completed status (by schedule entry ID and row ID), and ensure the existing schedule query is invalidated/refetched after the toggle so the UI stays in sync.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A mutation hook exists for toggling a set row's completed state, accepting a schedule entry ID and set row ID.",
+        "On mutation success, the workout schedule query cache is invalidated so Today's Workout and Schedule pages reflect the updated state.",
+        "The hook handles loading and error states."
       ]
     }
   ],
   "constraints": [
-    "Only change the notification interval value — do not alter notification content, service worker message handling, or any other logic.",
-    "Do not modify any immutable frontend paths."
+    "Do not edit files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "Existing plain-text workoutDetails entries must remain backward-compatible — no data loss or breakage for users who have not adopted set rows.",
+    "All Motoko logic must remain in the single backend/main.mo actor file."
   ],
   "nonGoals": [
-    "Allowing users to customize their own notification interval.",
-    "Changing any backend logic or data models.",
-    "Modifying the Settings UI or notification toggle behavior."
+    "Drag-and-drop reordering of set rows.",
+    "Shared or template set-row libraries across multiple days.",
+    "Any changes to the tier system, notifications, or motivational messages.",
+    "Any new backend data model beyond extending the existing WorkoutSchedule type."
   ],
   "imageRequirements": {
     "required": [],

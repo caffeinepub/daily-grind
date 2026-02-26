@@ -13,6 +13,11 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const SetRow = IDL.Record({
+  'id' : IDL.Nat,
+  'completed' : IDL.Bool,
+  'description' : IDL.Text,
+});
 export const DayOfWeek = IDL.Variant({
   'tuesday' : IDL.Null,
   'wednesday' : IDL.Null,
@@ -22,8 +27,9 @@ export const DayOfWeek = IDL.Variant({
   'friday' : IDL.Null,
   'monday' : IDL.Null,
 });
-export const WorkoutScheduleEntry = IDL.Record({
+export const WorkoutSchedule = IDL.Record({
   'workoutDetails' : IDL.Text,
+  'setRows' : IDL.Vec(SetRow),
   'owner' : IDL.Principal,
   'dayOfWeek' : DayOfWeek,
   'completed' : IDL.Bool,
@@ -56,7 +62,7 @@ export const idlService = IDL.Service({
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createOrUpdateWorkoutSchedule' : IDL.Func(
-      [IDL.Text, WorkoutScheduleEntry],
+      [IDL.Text, WorkoutSchedule],
       [],
       [],
     ),
@@ -90,14 +96,11 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getUserTier' : IDL.Func([], [Tier], ['query']),
-  'getWorkoutSchedules' : IDL.Func(
-      [],
-      [IDL.Vec(WorkoutScheduleEntry)],
-      ['query'],
-    ),
+  'getWorkoutSchedules' : IDL.Func([], [IDL.Vec(WorkoutSchedule)], ['query']),
   'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isNotificationsEnabled' : IDL.Func([], [IDL.Bool], ['query']),
+  'markSetRowComplete' : IDL.Func([IDL.Text, IDL.Nat, IDL.Bool], [], []),
   'markWorkoutComplete' : IDL.Func([IDL.Text, IDL.Bool], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
 });
@@ -110,6 +113,11 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const SetRow = IDL.Record({
+    'id' : IDL.Nat,
+    'completed' : IDL.Bool,
+    'description' : IDL.Text,
+  });
   const DayOfWeek = IDL.Variant({
     'tuesday' : IDL.Null,
     'wednesday' : IDL.Null,
@@ -119,8 +127,9 @@ export const idlFactory = ({ IDL }) => {
     'friday' : IDL.Null,
     'monday' : IDL.Null,
   });
-  const WorkoutScheduleEntry = IDL.Record({
+  const WorkoutSchedule = IDL.Record({
     'workoutDetails' : IDL.Text,
+    'setRows' : IDL.Vec(SetRow),
     'owner' : IDL.Principal,
     'dayOfWeek' : DayOfWeek,
     'completed' : IDL.Bool,
@@ -153,7 +162,7 @@ export const idlFactory = ({ IDL }) => {
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createOrUpdateWorkoutSchedule' : IDL.Func(
-        [IDL.Text, WorkoutScheduleEntry],
+        [IDL.Text, WorkoutSchedule],
         [],
         [],
       ),
@@ -187,14 +196,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getUserTier' : IDL.Func([], [Tier], ['query']),
-    'getWorkoutSchedules' : IDL.Func(
-        [],
-        [IDL.Vec(WorkoutScheduleEntry)],
-        ['query'],
-      ),
+    'getWorkoutSchedules' : IDL.Func([], [IDL.Vec(WorkoutSchedule)], ['query']),
     'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isNotificationsEnabled' : IDL.Func([], [IDL.Bool], ['query']),
+    'markSetRowComplete' : IDL.Func([IDL.Text, IDL.Nat, IDL.Bool], [], []),
     'markWorkoutComplete' : IDL.Func([IDL.Text, IDL.Bool], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   });
