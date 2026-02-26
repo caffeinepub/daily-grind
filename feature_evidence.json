@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-schedule-page-frontend-src-pages-schedule-tsx-so-that-when-a-user-creates-or-edits-a-workout-entry-the-workout-details-section-renders-as-a-dynamic-list-of-set-row-inputs-instead-of-a-single-textarea-each-row-has-a-text-input-for-the-set-description-e-g-3x10-bench-press-users-can-add-new-rows-with-an-add-set-button-and-remove-existing-rows-with-a-delete-trash-icon-per-row-on-save-the-rows-are-persisted-to-the-backend-as-structured-set-rows-via-the-updated-mutation-hook",
-      "featureTitle": "Update the Schedule page (`frontend/src/pages/Schedule.tsx`) so that when a user creates or edits a workout entry, the workout details section renders as a dynamic list of set-row inputs instead of a single textarea. Each row has a text input for the set description (e.g., '3x10 Bench Press'). Users can add new rows with an '+ Add Set' button and remove existing rows with a delete/trash icon per row. On save, the rows are persisted to the backend as structured set rows via the updated mutation hook.",
+      "featureId": "feature-diagnose-and-fix-the-bug-in-frontend-src-pages-schedule-tsx-that-prevents-users-from-saving-workout-entries-inspect-the-save-submit-handler-the-mutation-hook-invocation-in-frontend-src-hooks-usequeries-ts-and-the-data-shape-being-passed-to-the-backend-including-the-new-setrows-array-field-ensure-the-mutation-correctly-calls-the-backend-createscheduleentry-or-updatescheduleentry-function-with-a-valid-payload-including-all-required-fields-day-workoutname-workoutdetails-timereminder-setrows-and-that-errors-are-surfaced-to-the-user-rather-than-silently-swallowed-after-fixing-the-save-button-must-successfully-persist-the-entry-and-trigger-a-schedule-query-invalidation-refetch",
+      "featureTitle": "Diagnose and fix the bug in `frontend/src/pages/Schedule.tsx` that prevents users from saving workout entries. Inspect the save/submit handler, the mutation hook invocation (in `frontend/src/hooks/useQueries.ts`), and the data shape being passed to the backend (including the new `setRows` array field). Ensure the mutation correctly calls the backend `createScheduleEntry` or `updateScheduleEntry` function with a valid payload — including all required fields (`day`, `workoutName`, `workoutDetails`, `timeReminder`, `setRows`) — and that errors are surfaced to the user rather than silently swallowed. After fixing, the Save button must successfully persist the entry and trigger a schedule query invalidation/refetch.",
       "files": [
         "frontend/src/pages/Schedule.tsx"
       ],
@@ -16,32 +16,13 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-19"
+        "REQ-22"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-the-today-s-workout-page-frontend-src-pages-todaysworkout-tsx-to-render-the-workout-s-set-rows-as-a-vertical-checklist-each-set-row-is-displayed-as-a-row-with-a-checkbox-and-its-description-text-checking-a-checkbox-marks-that-individual-set-row-as-completed-and-persists-the-change-to-the-backend-completed-rows-are-visually-distinguished-e-g-strikethrough-text-and-a-muted-checked-style-consistent-with-the-app-s-dark-fitness-theme-if-the-entry-has-no-set-rows-fall-back-to-displaying-the-plain-workout-details-text-as-before",
-      "featureTitle": "Update the Today's Workout page (`frontend/src/pages/TodaysWorkout.tsx`) to render the workout's set rows as a vertical checklist. Each set row is displayed as a row with a checkbox and its description text. Checking a checkbox marks that individual set row as completed and persists the change to the backend. Completed rows are visually distinguished (e.g., strikethrough text and a muted/checked style consistent with the app's dark fitness theme). If the entry has no set rows, fall back to displaying the plain workout details text as before.",
-      "files": [
-        "frontend/src/pages/TodaysWorkout.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-20"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-or-update-react-query-hooks-in-frontend-src-hooks-usequeries-ts-to-support-set-row-operations-a-mutation-to-toggle-a-single-set-row-s-completed-status-by-schedule-entry-id-and-row-id-and-ensure-the-existing-schedule-query-is-invalidated-refetched-after-the-toggle-so-the-ui-stays-in-sync",
-      "featureTitle": "Add or update React Query hooks in `frontend/src/hooks/useQueries.ts` to support set-row operations: a mutation to toggle a single set row's completed status (by schedule entry ID and row ID), and ensure the existing schedule query is invalidated/refetched after the toggle so the UI stays in sync.",
+      "featureId": "feature-audit-the-mutation-hook-s-in-frontend-src-hooks-usequeries-ts-responsible-for-creating-and-updating-schedule-entries-ensure-the-argument-types-match-the-updated-workoutschedule-backend-type-that-includes-the-setrows-field-fix-any-type-mismatches-missing-fields-or-incorrect-argument-serialization-that-could-cause-the-candid-call-to-fail-silently-or-throw",
+      "featureTitle": "Audit the mutation hook(s) in `frontend/src/hooks/useQueries.ts` responsible for creating and updating schedule entries. Ensure the argument types match the updated `WorkoutSchedule` backend type that includes the `setRows` field. Fix any type mismatches, missing fields, or incorrect argument serialization that could cause the Candid call to fail silently or throw.",
       "files": [
         "frontend/src/hooks/useQueries.ts"
       ],
@@ -54,7 +35,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-21"
+        "REQ-23"
       ],
       "confidence": "high"
     }

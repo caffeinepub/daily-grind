@@ -1,169 +1,181 @@
-import { useState } from 'react';
-import { useGetWorkoutSchedules, useCreateOrUpdateWorkoutSchedule, useDeleteWorkoutSchedule } from '../hooks/useQueries';
-import { DayOfWeek, WorkoutSchedule } from '../backend';
+import React, { useState } from 'react';
+import { Plus, Edit2, Trash2, Clock, Save, X, ChevronDown, ChevronUp, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, Edit2, Clock, CheckCircle2, X, GripVertical } from 'lucide-react';
+import {
+  useGetWorkoutSchedules,
+  useCreateOrUpdateWorkoutSchedule,
+  useDeleteWorkoutSchedule,
+} from '../hooks/useQueries';
+import { WorkoutSchedule, DayOfWeek } from '../backend';
+import AuthGuard from '../components/AuthGuard';
 
-const DAYS: { key: DayOfWeek; label: string; short: string }[] = [
-  { key: DayOfWeek.monday, label: 'Monday', short: 'Mon' },
-  { key: DayOfWeek.tuesday, label: 'Tuesday', short: 'Tue' },
-  { key: DayOfWeek.wednesday, label: 'Wednesday', short: 'Wed' },
-  { key: DayOfWeek.thursday, label: 'Thursday', short: 'Thu' },
-  { key: DayOfWeek.friday, label: 'Friday', short: 'Fri' },
-  { key: DayOfWeek.saturday, label: 'Saturday', short: 'Sat' },
-  { key: DayOfWeek.sunday, label: 'Sunday', short: 'Sun' },
+const DAYS: { key: DayOfWeek; label: string }[] = [
+  { key: DayOfWeek.monday, label: 'Monday' },
+  { key: DayOfWeek.tuesday, label: 'Tuesday' },
+  { key: DayOfWeek.wednesday, label: 'Wednesday' },
+  { key: DayOfWeek.thursday, label: 'Thursday' },
+  { key: DayOfWeek.friday, label: 'Friday' },
+  { key: DayOfWeek.saturday, label: 'Saturday' },
+  { key: DayOfWeek.sunday, label: 'Sunday' },
 ];
 
-const TODAY_DAY = (() => {
-  const d = new Date().getDay();
-  const map: Record<number, DayOfWeek> = {
-    0: DayOfWeek.sunday,
-    1: DayOfWeek.monday,
-    2: DayOfWeek.tuesday,
-    3: DayOfWeek.wednesday,
-    4: DayOfWeek.thursday,
-    5: DayOfWeek.friday,
-    6: DayOfWeek.saturday,
-  };
-  return map[d];
-})();
-
-interface LocalSetRow {
-  localId: string;
+interface SetRowDraft {
+  id: bigint;
   description: string;
   completed: boolean;
 }
 
-interface EditFormState {
+interface EditForm {
   workoutName: string;
+  workoutDetails: string;
   timeReminder: string;
-  setRows: LocalSetRow[];
+  setRows: SetRowDraft[];
 }
 
-function generateLocalId() {
-  return Math.random().toString(36).slice(2);
+function generateId(day: DayOfWeek): string {
+  return `${day}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-function workoutToEditForm(entry: WorkoutSchedule | null): EditFormState {
-  if (!entry) {
-    return { workoutName: '', timeReminder: '', setRows: [{ localId: generateLocalId(), description: '', completed: false }] };
-  }
-
-  // If there are structured set rows, use them
-  if (entry.setRows && entry.setRows.length > 0) {
-    return {
-      workoutName: entry.workoutName,
-      timeReminder: entry.timeReminder ?? '',
-      setRows: entry.setRows.map((r) => ({
-        localId: generateLocalId(),
-        description: r.description,
-        completed: r.completed,
-      })),
-    };
-  }
-
-  // Backward compat: plain workoutDetails → single row
-  return {
-    workoutName: entry.workoutName,
-    timeReminder: entry.timeReminder ?? '',
-    setRows: entry.workoutDetails
-      ? [{ localId: generateLocalId(), description: entry.workoutDetails, completed: false }]
-      : [{ localId: generateLocalId(), description: '', completed: false }],
-  };
-}
-
-export default function Schedule() {
+function ScheduleContent() {
   const { data: schedules = [], isLoading } = useGetWorkoutSchedules();
   const createOrUpdate = useCreateOrUpdateWorkoutSchedule();
   const deleteSchedule = useDeleteWorkoutSchedule();
 
   const [editingDay, setEditingDay] = useState<DayOfWeek | null>(null);
-  const [editForm, setEditForm] = useState<EditFormState>({ workoutName: '', timeReminder: '', setRows: [] });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>({
+    workoutName: '',
+    workoutDetails: '',
+    timeReminder: '',
+    setRows: [],
+  });
+  const [expandedDays, setExpandedDays] = useState<Set<DayOfWeek>>(new Set());
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const getEntryForDay = (day: DayOfWeek) =>
-    schedules.find((s) => s.dayOfWeek === day) ?? null;
+  const getScheduleForDay = (day: DayOfWeek): WorkoutSchedule | undefined =>
+    schedules.find((s) => s.dayOfWeek === day);
 
-  const getEntryIdForDay = (day: DayOfWeek): string =>
-    `${day}-${schedules.find((s) => s.dayOfWeek === day)?.workoutName ?? 'new'}`;
+  const toggleExpand = (day: DayOfWeek) => {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(day)) next.delete(day);
+      else next.add(day);
+      return next;
+    });
+  };
 
   const startEdit = (day: DayOfWeek) => {
-    const entry = getEntryForDay(day);
-    setEditForm(workoutToEditForm(entry));
+    const existing = getScheduleForDay(day);
+    setSaveError(null);
+    if (existing) {
+      setEditingId(
+        // derive the stable id from the schedule list index as a fallback
+        schedules.findIndex((s) => s.dayOfWeek === day) >= 0
+          ? `${day}-entry`
+          : generateId(day)
+      );
+      setEditForm({
+        workoutName: existing.workoutName,
+        workoutDetails: existing.workoutDetails,
+        timeReminder: existing.timeReminder ?? '',
+        setRows: existing.setRows.map((r) => ({
+          id: typeof r.id === 'bigint' ? r.id : BigInt(r.id as unknown as number),
+          description: r.description,
+          completed: r.completed,
+        })),
+      });
+    } else {
+      setEditingId(generateId(day));
+      setEditForm({ workoutName: '', workoutDetails: '', timeReminder: '', setRows: [] });
+    }
     setEditingDay(day);
+    setExpandedDays((prev) => new Set(prev).add(day));
   };
 
   const cancelEdit = () => {
     setEditingDay(null);
+    setEditingId(null);
+    setSaveError(null);
   };
 
-  // Set row helpers
   const addSetRow = () => {
     setEditForm((prev) => ({
       ...prev,
-      setRows: [...prev.setRows, { localId: generateLocalId(), description: '', completed: false }],
+      setRows: [
+        ...prev.setRows,
+        { id: BigInt(prev.setRows.length), description: '', completed: false },
+      ],
     }));
   };
 
-  const removeSetRow = (localId: string) => {
+  const updateSetRow = (index: number, description: string) => {
+    setEditForm((prev) => {
+      const rows = [...prev.setRows];
+      rows[index] = { ...rows[index], description };
+      return { ...prev, setRows: rows };
+    });
+  };
+
+  const removeSetRow = (index: number) => {
     setEditForm((prev) => ({
       ...prev,
-      setRows: prev.setRows.filter((r) => r.localId !== localId),
+      setRows: prev.setRows.filter((_, i) => i !== index),
     }));
   };
 
-  const updateSetRowDescription = (localId: string, description: string) => {
-    setEditForm((prev) => ({
-      ...prev,
-      setRows: prev.setRows.map((r) => (r.localId === localId ? { ...r, description } : r)),
+  const handleSave = async () => {
+    if (!editingDay || !editingId) return;
+    setSaveError(null);
+
+    // Determine a stable ID: reuse existing entry's key if one exists
+    const existingIndex = schedules.findIndex((s) => s.dayOfWeek === editingDay);
+    const stableId = existingIndex >= 0 ? `${editingDay}-entry` : editingId;
+
+    // Re-index setRows so ids are sequential bigints
+    const normalizedSetRows = editForm.setRows.map((row, idx) => ({
+      id: BigInt(idx),
+      description: row.description,
+      completed: row.completed,
     }));
-  };
-
-  const handleSave = async (day: DayOfWeek) => {
-    const existing = getEntryForDay(day);
-    const id = existing
-      ? schedules.findIndex((s) => s.dayOfWeek === day).toString() + '-' + day
-      : `${day}-${Date.now()}`;
-
-    // Build the actual id key consistently
-    const entryId = existing
-      ? Object.keys(schedules).find((_, i) => schedules[i].dayOfWeek === day) ?? `${day}-${Date.now()}`
-      : `${day}-${Date.now()}`;
-
-    const filteredRows = editForm.setRows.filter((r) => r.description.trim() !== '');
 
     const schedule: WorkoutSchedule = {
-      dayOfWeek: day,
+      dayOfWeek: editingDay,
       workoutName: editForm.workoutName,
-      workoutDetails: filteredRows.map((r) => r.description).join('\n'),
+      workoutDetails: editForm.workoutDetails,
       timeReminder: editForm.timeReminder || undefined,
-      completed: existing?.completed ?? false,
-      setRows: filteredRows.map((r, idx) => ({
-        id: BigInt(idx),
-        description: r.description,
-        completed: r.completed,
-      })),
-      owner: existing?.owner ?? ({} as any),
+      completed: getScheduleForDay(editingDay)?.completed ?? false,
+      setRows: normalizedSetRows,
+      // owner is overwritten by the backend with caller's principal
+      // We must pass a structurally valid Principal — use anonymous()
+      owner: { _isPrincipal: true, toText: () => '2vxsx-fae', toUint8Array: () => new Uint8Array([4]) } as any,
     };
 
-    // Use a stable ID: day-based so updates overwrite the same key
-    const stableId = `schedule-${day}`;
-
-    await createOrUpdate.mutateAsync({ id: stableId, schedule });
-    setEditingDay(null);
+    try {
+      await createOrUpdate.mutateAsync({ id: stableId, schedule });
+      setEditingDay(null);
+      setEditingId(null);
+    } catch (err: any) {
+      console.error('Save failed:', err);
+      setSaveError(err?.message ?? 'Failed to save workout. Please try again.');
+    }
   };
 
   const handleDelete = async (day: DayOfWeek) => {
-    const stableId = `schedule-${day}`;
-    await deleteSchedule.mutateAsync(stableId);
+    const stableId = `${day}-entry`;
+    try {
+      await deleteSchedule.mutateAsync(stableId);
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent" />
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -171,206 +183,222 @@ export default function Schedule() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
       <div className="mb-6">
-        <h1 className="text-3xl font-display font-bold text-foreground tracking-tight">Weekly Schedule</h1>
+        <h1 className="text-3xl font-bold font-display text-foreground">Weekly Schedule</h1>
         <p className="text-muted-foreground mt-1">Plan your workouts for each day of the week.</p>
       </div>
 
       {DAYS.map(({ key, label }) => {
-        const entry = getEntryForDay(key);
-        const isToday = key === TODAY_DAY;
+        const entry = getScheduleForDay(key);
         const isEditing = editingDay === key;
+        const isExpanded = expandedDays.has(key);
+        const isSaving = createOrUpdate.isPending && editingDay === key;
 
         return (
-          <Card
-            key={key}
-            className={`border transition-all ${
-              isToday ? 'border-primary/60 shadow-glow' : 'border-border'
-            } bg-card`}
-          >
-            <CardHeader className="pb-2 pt-4 px-4">
+          <Card key={key} className="border border-border bg-card">
+            <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-base font-display font-semibold text-foreground">
-                    {label}
-                  </CardTitle>
-                  {isToday && (
-                    <Badge variant="default" className="text-xs bg-primary text-primary-foreground">
-                      Today
-                    </Badge>
-                  )}
-                  {entry?.completed && (
-                    <Badge variant="secondary" className="text-xs gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Done
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => toggleExpand(key)}
+                    className="flex items-center gap-2 text-left"
+                  >
+                    {isExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <CardTitle className="text-base font-semibold">{label}</CardTitle>
+                  </button>
+                  {entry && (
+                    <Badge
+                      variant={entry.completed ? 'default' : 'outline'}
+                      className="text-xs"
+                    >
+                      {entry.completed ? '✓ Done' : entry.workoutName}
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   {!isEditing && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        onClick={() => startEdit(key)}
-                      >
-                        {entry ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                      </Button>
-                      {entry && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDelete(key)}
-                          disabled={deleteSchedule.isPending}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </>
-                  )}
-                  {isEditing && (
                     <Button
+                      size="sm"
                       variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={cancelEdit}
+                      onClick={() => startEdit(key)}
+                      className="h-8 px-2"
                     >
-                      <X className="w-4 h-4" />
+                      {entry ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    </Button>
+                  )}
+                  {entry && !isEditing && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(key)}
+                      className="h-8 px-2 text-destructive hover:text-destructive"
+                      disabled={deleteSchedule.isPending}
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   )}
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="px-4 pb-4">
-              {!isEditing && entry && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">{entry.workoutName}</p>
-                  {entry.timeReminder && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      {entry.timeReminder}
+            {(isExpanded || isEditing) && (
+              <CardContent className="pt-0 space-y-3">
+                {isEditing ? (
+                  <div className="space-y-3">
+                    {/* Error message */}
+                    {saveError && (
+                      <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <span>{saveError}</span>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1 block">
+                        Workout Name
+                      </label>
+                      <Input
+                        placeholder="e.g. Upper Body Strength"
+                        value={editForm.workoutName}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({ ...prev, workoutName: e.target.value }))
+                        }
+                      />
                     </div>
-                  )}
-                  {/* Show set rows or fallback to workoutDetails */}
-                  {entry.setRows && entry.setRows.length > 0 ? (
-                    <ul className="space-y-1 mt-2">
-                      {entry.setRows.map((row, idx) => (
-                        <li key={String(row.id)} className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span className="text-xs text-primary font-mono w-5 shrink-0">{idx + 1}.</span>
-                          <span className={row.completed ? 'line-through opacity-50' : ''}>{row.description}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : entry.workoutDetails ? (
-                    <p className="text-sm text-muted-foreground">{entry.workoutDetails}</p>
-                  ) : null}
-                </div>
-              )}
 
-              {!isEditing && !entry && (
-                <p className="text-sm text-muted-foreground italic">No workout scheduled. Click + to add one.</p>
-              )}
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1 block">
+                        Notes / Details
+                      </label>
+                      <Input
+                        placeholder="Optional notes about this workout"
+                        value={editForm.workoutDetails}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({ ...prev, workoutDetails: e.target.value }))
+                        }
+                      />
+                    </div>
 
-              {isEditing && (
-                <div className="space-y-4 mt-2">
-                  {/* Workout name */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Workout Name
-                    </label>
-                    <Input
-                      placeholder="e.g. Upper Body Strength"
-                      value={editForm.workoutName}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, workoutName: e.target.value }))}
-                      className="bg-background border-border"
-                    />
-                  </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1 block">
+                        <Clock className="w-3 h-3 inline mr-1" />
+                        Reminder Time (optional)
+                      </label>
+                      <Input
+                        type="time"
+                        value={editForm.timeReminder}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({ ...prev, timeReminder: e.target.value }))
+                        }
+                      />
+                    </div>
 
-                  {/* Time reminder */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Time Reminder (optional)
-                    </label>
-                    <Input
-                      placeholder="e.g. 7:00 AM"
-                      value={editForm.timeReminder}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, timeReminder: e.target.value }))}
-                      className="bg-background border-border"
-                    />
-                  </div>
-
-                  {/* Set rows */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Sets / Exercises
-                    </label>
-
-                    <div className="space-y-2">
-                      {editForm.setRows.map((row, idx) => (
-                        <div key={row.localId} className="flex items-center gap-2">
-                          <div className="flex items-center gap-1 shrink-0">
-                            <GripVertical className="w-4 h-4 text-muted-foreground/40" />
-                            <span className="text-xs text-primary font-mono w-5 text-right">{idx + 1}.</span>
+                    {/* Set Rows */}
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">
+                        Sets / Exercises
+                      </label>
+                      <div className="space-y-2">
+                        {editForm.setRows.map((row, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground w-5 text-right shrink-0">
+                              {idx + 1}.
+                            </span>
+                            <Input
+                              placeholder={`Set ${idx + 1} description`}
+                              value={row.description}
+                              onChange={(e) => updateSetRow(idx, e.target.value)}
+                              className="flex-1"
+                            />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => removeSetRow(idx)}
+                              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
                           </div>
-                          <Input
-                            placeholder={`Set ${idx + 1} — e.g. 3×10 Bench Press`}
-                            value={row.description}
-                            onChange={(e) => updateSetRowDescription(row.localId, e.target.value)}
-                            className="bg-background border-border flex-1"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeSetRow(row.localId)}
-                            disabled={editForm.setRows.length === 1}
-                            title="Remove set"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={addSetRow}
+                        className="mt-2 h-8 text-xs"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add Set
+                      </Button>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full border-dashed border-border text-muted-foreground hover:text-foreground hover:border-primary/50 mt-1"
-                      onClick={addSetRow}
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add Set
-                    </Button>
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        onClick={handleSave}
+                        disabled={isSaving || !editForm.workoutName.trim()}
+                        className="flex-1"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            Saving…
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-3 h-3 mr-1" />
+                            Save
+                          </>
+                        )}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={cancelEdit} disabled={isSaving}>
+                        <X className="w-3 h-3 mr-1" />
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-
-                  {/* Save / Cancel */}
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                      onClick={() => handleSave(key)}
-                      disabled={createOrUpdate.isPending || !editForm.workoutName.trim()}
-                    >
-                      {createOrUpdate.isPending ? (
-                        <span className="flex items-center gap-2">
-                          <span className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent" />
-                          Saving…
-                        </span>
-                      ) : (
-                        'Save'
-                      )}
-                    </Button>
-                    <Button variant="outline" onClick={cancelEdit} className="border-border">
-                      Cancel
-                    </Button>
+                ) : entry ? (
+                  <div className="space-y-2 text-sm">
+                    {entry.timeReminder && (
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Clock className="w-3 h-3" />
+                        <span>{entry.timeReminder}</span>
+                      </div>
+                    )}
+                    {entry.setRows && entry.setRows.length > 0 ? (
+                      <ul className="space-y-1">
+                        {entry.setRows.map((row, idx) => (
+                          <li key={idx} className="flex items-center gap-2 text-muted-foreground">
+                            <span className="w-4 text-right text-xs">{idx + 1}.</span>
+                            <span className={row.completed ? 'line-through opacity-60' : ''}>
+                              {row.description}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : entry.workoutDetails ? (
+                      <p className="text-muted-foreground">{entry.workoutDetails}</p>
+                    ) : null}
                   </div>
-                </div>
-              )}
-            </CardContent>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No workout scheduled.</p>
+                )}
+              </CardContent>
+            )}
           </Card>
         );
       })}
     </div>
+  );
+}
+
+export default function Schedule() {
+  return (
+    <AuthGuard>
+      <ScheduleContent />
+    </AuthGuard>
   );
 }

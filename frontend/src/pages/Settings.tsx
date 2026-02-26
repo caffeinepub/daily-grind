@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
-import { useUserTier, useEvaluateTier, useGetWorkoutSchedules } from '../hooks/useQueries';
+import { useGetUserTier, useEvaluateAndAdvanceTier, useGetWorkoutSchedules } from '../hooks/useQueries';
 import TierBadge, { TIERS, getTierStyle } from '../components/TierBadge';
 import { Variant_up_down_same, TierProgressionResult } from '../backend';
 import { useNotifications } from '../hooks/useNotifications';
@@ -20,9 +20,9 @@ function getCurrentWeekNumber(): bigint {
 }
 
 export default function Settings() {
-  const { data: tier, isLoading: tierLoading } = useUserTier();
+  const { data: tier, isLoading: tierLoading } = useGetUserTier();
   const { data: schedules } = useGetWorkoutSchedules();
-  const evaluateMutation = useEvaluateTier();
+  const evaluateMutation = useEvaluateAndAdvanceTier();
   const [lastResult, setLastResult] = useState<TierProgressionResult | null>(null);
 
   const {
@@ -57,6 +57,7 @@ export default function Settings() {
   };
 
   const tierIndex = tier ? Number(tier.index) : 0;
+  // TIERS is string[], so elements are plain strings
   const nextTierName = tierIndex < TIERS.length - 1 ? TIERS[tierIndex + 1] : null;
   const prevTierName = tierIndex > 0 ? TIERS[tierIndex - 1] : null;
 
@@ -175,91 +176,79 @@ export default function Settings() {
           </div>
 
           {tierLoading ? (
-            <div className="flex flex-col items-center gap-3">
-              <Skeleton className="h-32 w-48 rounded-2xl bg-muted" />
-            </div>
+            <Skeleton className="h-12 w-full bg-muted rounded-xl" />
           ) : tier ? (
-            <div className="flex flex-col items-center gap-4">
+            <div className="space-y-4">
               <TierBadge tier={tier} variant="full" />
 
-              {/* Tier ladder context */}
-              <div className="w-full space-y-1.5 text-sm">
-                {nextTierName && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <ChevronUp size={14} className="text-success shrink-0" />
-                    <span>Next: <span className="font-semibold text-foreground">{nextTierName}</span></span>
-                  </div>
-                )}
-                {prevTierName && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <ChevronDown size={14} className="text-destructive shrink-0" />
-                    <span>Previous: <span className="font-semibold text-foreground">{prevTierName}</span></span>
-                  </div>
-                )}
+              {/* Progress toward next tier */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Weekly completion</span>
+                  <span className="font-bold">{completedCount}/7 days</span>
+                </div>
+                <Progress value={completionOf7} className="h-2 bg-muted" />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>≥70% to advance</span>
+                  <span>{completionOf7}%</span>
+                </div>
+              </div>
+
+              {/* Tier neighbors — TIERS is string[], so elements are plain strings */}
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  {prevTierName ? (
+                    <>
+                      <ChevronDown size={12} />
+                      <span>{prevTierName}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Minus size={12} />
+                      <span>Floor</span>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  {nextTierName ? (
+                    <>
+                      <span>{nextTierName}</span>
+                      <ChevronUp size={12} />
+                    </>
+                  ) : (
+                    <>
+                      <span>Max tier</span>
+                      <Trophy size={12} className="text-primary" />
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm text-center py-4">No tier data available.</p>
+            <p className="text-sm text-muted-foreground">No tier data available.</p>
           )}
         </CardContent>
       </Card>
 
-      {/* Weekly Completion */}
+      {/* Evaluate Tier */}
       <Card className="bg-card border-border/40">
         <CardContent className="p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">This Week's Completion</h2>
-            <span className="text-sm font-black text-primary">{completionOf7}%</span>
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUpIcon size={16} className="text-primary" />
+            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Tier Evaluation</h2>
           </div>
-          <Progress value={completionOf7} className="h-3 bg-muted mb-3" />
-          <p className="text-xs text-muted-foreground">
-            {completedCount} of 7 days completed ({completedCount} scheduled workouts done)
+          <p className="text-xs text-muted-foreground mb-4">
+            Evaluate your performance for this week. Your tier will advance, hold, or drop based on how many workouts you completed (≥70% = advance, 40–69% = hold, &lt;40% = drop).
           </p>
-
-          {/* Thresholds */}
-          <div className="mt-4 space-y-2">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Advancement Thresholds</p>
-            <div className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 ${completionOf7 >= 70 ? 'bg-success/10 border border-success/30' : 'bg-muted/50'}`}>
-              <ChevronUp size={13} className={completionOf7 >= 70 ? 'text-success' : 'text-muted-foreground'} />
-              <span className={completionOf7 >= 70 ? 'text-success font-semibold' : 'text-muted-foreground'}>
-                ≥ 70% — Advance to next tier
-              </span>
-            </div>
-            <div className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 ${completionOf7 >= 40 && completionOf7 < 70 ? 'bg-primary/10 border border-primary/30' : 'bg-muted/50'}`}>
-              <Minus size={13} className={completionOf7 >= 40 && completionOf7 < 70 ? 'text-primary' : 'text-muted-foreground'} />
-              <span className={completionOf7 >= 40 && completionOf7 < 70 ? 'text-primary font-semibold' : 'text-muted-foreground'}>
-                40–69% — Hold current tier
-              </span>
-            </div>
-            <div className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 ${completionOf7 < 40 ? 'bg-destructive/10 border border-destructive/30' : 'bg-muted/50'}`}>
-              <ChevronDown size={13} className={completionOf7 < 40 ? 'text-destructive' : 'text-muted-foreground'} />
-              <span className={completionOf7 < 40 ? 'text-destructive font-semibold' : 'text-muted-foreground'}>
-                &lt; 40% — Drop one tier
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Evaluate Button */}
-      <Card className="bg-card border-border/40">
-        <CardContent className="p-5">
-          <div className="flex items-start gap-2 mb-4">
-            <Info size={15} className="text-muted-foreground mt-0.5 shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              Click "Evaluate This Week" at the end of each week to update your tier based on your workout completion. Your tier will advance, hold, or drop based on the thresholds above.
-            </p>
-          </div>
 
           <Button
             onClick={handleEvaluate}
-            disabled={evaluateMutation.isPending || tierLoading}
-            className="w-full font-bold"
-            size="lg"
+            disabled={evaluateMutation.isPending}
+            className="w-full"
           >
             {evaluateMutation.isPending ? (
               <>
-                <Loader2 size={16} className="animate-spin mr-2" />
+                <Loader2 size={14} className="mr-2 animate-spin" />
                 Evaluating…
               </>
             ) : (
@@ -267,55 +256,64 @@ export default function Settings() {
             )}
           </Button>
 
-          {/* Result feedback */}
-          {lastResult && !evaluateMutation.isPending && (
-            <div className={`mt-4 rounded-xl p-4 border text-sm font-semibold text-center ${
+          {/* Result */}
+          {lastResult && (
+            <div className={`mt-4 p-3 rounded-xl border text-sm ${
               lastResult.direction === Variant_up_down_same.up
                 ? 'bg-success/10 border-success/30 text-success'
                 : lastResult.direction === Variant_up_down_same.down
                 ? 'bg-destructive/10 border-destructive/30 text-destructive'
-                : 'bg-muted/50 border-border/40 text-muted-foreground'
+                : 'bg-muted/40 border-border/30 text-muted-foreground'
             }`}>
-              {lastResult.direction === Variant_up_down_same.up && (
-                <span>🎉 Promoted! {lastResult.previousTier.name} → <strong>{lastResult.newTier.name}</strong></span>
-              )}
-              {lastResult.direction === Variant_up_down_same.down && (
-                <span>📉 Dropped: {lastResult.previousTier.name} → <strong>{lastResult.newTier.name}</strong></span>
-              )}
-              {lastResult.direction === Variant_up_down_same.same && (
-                <span>➡️ Held tier: <strong>{lastResult.newTier.name}</strong></span>
-              )}
+              <div className="flex items-center gap-2 font-bold mb-1">
+                {lastResult.direction === Variant_up_down_same.up && <ChevronUp size={14} />}
+                {lastResult.direction === Variant_up_down_same.down && <ChevronDown size={14} />}
+                {lastResult.direction === Variant_up_down_same.same && <Minus size={14} />}
+                <span>
+                  {lastResult.direction === Variant_up_down_same.up && 'Tier Up!'}
+                  {lastResult.direction === Variant_up_down_same.down && 'Tier Down'}
+                  {lastResult.direction === Variant_up_down_same.same && 'Tier Held'}
+                </span>
+              </div>
+              <p className="text-xs opacity-80">
+                {lastResult.previousTier.name} → {lastResult.newTier.name}
+              </p>
             </div>
           )}
 
           {evaluateMutation.isError && (
-            <p className="mt-3 text-xs text-destructive text-center">
-              {(evaluateMutation.error as Error)?.message ?? 'Evaluation failed. Please try again.'}
+            <p className="mt-3 text-xs text-destructive">
+              Evaluation failed. Please try again.
             </p>
           )}
         </CardContent>
       </Card>
 
-      {/* All Tiers Reference */}
+      {/* Tier Reference Grid */}
       <Card className="bg-card border-border/40">
         <CardContent className="p-5">
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">All Tiers</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <Trophy size={16} className="text-primary" />
+            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">All Tiers</h2>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {TIERS.map((tierName, idx) => {
+              // getTierStyle takes a tier name string
               const style = getTierStyle(tierName);
-              const isCurrent = tier && Number(tier.index) === idx;
+              const isCurrent = tier ? Number(tier.index) === idx : false;
               return (
                 <div
-                  key={tierName}
+                  key={idx}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold transition-all ${
                     isCurrent
-                      ? `${style.bg} ${style.border} ${style.text} ${style.glow}`
-                      : 'bg-muted/30 border-border/20 text-muted-foreground'
+                      ? 'border-primary/60 bg-primary/10 text-primary'
+                      : `border-border/30 ${style.bg} ${style.text}`
                   }`}
                 >
                   <span>{style.icon}</span>
+                  {/* tierName is already a plain string */}
                   <span>{tierName}</span>
-                  {isCurrent && <span className="ml-auto text-[10px] font-black uppercase tracking-wider opacity-80">YOU</span>}
+                  {isCurrent && <span className="ml-auto text-[10px] font-black text-primary">YOU</span>}
                 </div>
               );
             })}
@@ -323,5 +321,26 @@ export default function Settings() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Local icon alias to avoid import conflict with Progress component
+function TrendingUpIcon({ size, className }: { size: number; className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
   );
 }

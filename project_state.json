@@ -1,14 +1,16 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
+  "projectStateVersion": 13,
   "summary": "Building 'Daily Grind' — a daily workout reminder app with weekly workout schedule, today's workout view, mark-as-completed, motivational messages, progress tracking, and user authentication.",
   "architectural_notes": [
     "Three data tables: Workout Schedule, Motivation Messages, User",
     "Four main screens: Today, Schedule, Progress, Settings",
     "Tier progression: 22 tiers total (Dirt through Anti-matter), computed weekly based on schedule completion rate"
   ],
-  "known_issues": [],
-  "isFixRequest": false,
+  "known_issues": [
+    "Saving a workout is broken — users are unable to save workout entries"
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-build-a-today-s-workout-screen-that-auto-matches-the-current-day-of-the-week-derived-from-the-client-s-local-date-to-the-user-s-workout-schedule-entry-for-that-day-display-the-workout-name-workout-details-and-time-reminder-include-a-mark-as-completed-button-that-updates-the-completed-status-for-that-entry-if-no-workout-is-scheduled-for-today-show-a-friendly-placeholder-message",
@@ -127,6 +129,22 @@
       "title": "Add or update React Query hooks in `frontend/src/hooks/useQueries.ts` to support set-row operations: a mutation to toggle a single set row's completed status (by schedule entry ID and row ID), and ensure the existing schedule query is invalidated/refetched after the toggle so the UI stays in sync.",
       "reqIds": [
         "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-diagnose-and-fix-the-bug-in-frontend-src-pages-schedule-tsx-that-prevents-users-from-saving-workout-entries-inspect-the-save-submit-handler-the-mutation-hook-invocation-in-frontend-src-hooks-usequeries-ts-and-the-data-shape-being-passed-to-the-backend-including-the-new-setrows-array-field-ensure-the-mutation-correctly-calls-the-backend-createscheduleentry-or-updatescheduleentry-function-with-a-valid-payload-including-all-required-fields-day-workoutname-workoutdetails-timereminder-setrows-and-that-errors-are-surfaced-to-the-user-rather-than-silently-swallowed-after-fixing-the-save-button-must-successfully-persist-the-entry-and-trigger-a-schedule-query-invalidation-refetch",
+      "title": "Diagnose and fix the bug in `frontend/src/pages/Schedule.tsx` that prevents users from saving workout entries. Inspect the save/submit handler, the mutation hook invocation (in `frontend/src/hooks/useQueries.ts`), and the data shape being passed to the backend (including the new `setRows` array field). Ensure the mutation correctly calls the backend `createScheduleEntry` or `updateScheduleEntry` function with a valid payload — including all required fields (`day`, `workoutName`, `workoutDetails`, `timeReminder`, `setRows`) — and that errors are surfaced to the user rather than silently swallowed. After fixing, the Save button must successfully persist the entry and trigger a schedule query invalidation/refetch.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-audit-the-mutation-hook-s-in-frontend-src-hooks-usequeries-ts-responsible-for-creating-and-updating-schedule-entries-ensure-the-argument-types-match-the-updated-workoutschedule-backend-type-that-includes-the-setrows-field-fix-any-type-mismatches-missing-fields-or-incorrect-argument-serialization-that-could-cause-the-candid-call-to-fail-silently-or-throw",
+      "title": "Audit the mutation hook(s) in `frontend/src/hooks/useQueries.ts` responsible for creating and updating schedule entries. Ensure the argument types match the updated `WorkoutSchedule` backend type that includes the `setRows` field. Fix any type mismatches, missing fields, or incorrect argument serialization that could cause the Candid call to fail silently or throw.",
+      "reqIds": [
+        "REQ-23"
       ],
       "version": 1
     }

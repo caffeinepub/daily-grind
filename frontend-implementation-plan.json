@@ -1,59 +1,40 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Structured set rows in workout description with per-row check-off",
+  "title": "Fix: Unable to save workout entries on Schedule page",
   "requirements": [
     {
-      "id": "REQ-19",
-      "summary": "Update Schedule page to support dynamic set-row inputs for workout creation and editing",
+      "id": "REQ-22",
+      "summary": "Fix the save handler in Schedule.tsx to properly persist workout entries with all required fields including setRows, and ensure errors are surfaced to the user",
       "acceptanceCriteria": [
-        "The Schedule edit form shows workout details as a column of individual set-row text inputs rather than a plain textarea.",
-        "An '+ Add Set' button appends a new empty row to the list.",
-        "Each row has a remove button that deletes that row from the local list.",
-        "Saving the form persists all set rows to the backend.",
-        "Existing entries that had plain-text details are displayed gracefully (e.g., shown as a single pre-filled row).",
-        "Row order is preserved after save and reload."
+        "Clicking Save on a new or edited workout entry in the Schedule page successfully persists the entry to the backend without errors.",
+        "After saving, the updated entry is visible in the schedule list (query is invalidated and refetched).",
+        "If a backend error occurs, an error message is shown to the user.",
+        "Entries with set rows (structured list) and entries without set rows (plain workoutDetails) both save correctly.",
+        "The Save button does not remain in a loading/disabled state after a successful save."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/Schedule.tsx",
           "operation": "modify",
-          "description": "Replace the plain textarea workout details input with a dynamic list of set-row inputs. Add state management for an array of set rows (each with a temporary client-side ID, description text, and completed status). Render each row as a text input with a remove button. Add an '+ Add Set' button below the list. When the form is submitted, map the local set rows to the backend SetRow format (with bigint IDs) and pass them in the createOrUpdateWorkoutSchedule mutation. For existing entries that have no setRows or only workoutDetails, display the workoutDetails as a single pre-filled row or preserve backward compatibility by treating empty setRows as plain-text mode. Ensure row order is maintained."
+          "description": "Fix the handleSave function to correctly structure the workout entry payload with all required fields (day, workoutName, workoutDetails, timeReminder, setRows). Ensure the setRows array is properly formatted with id, description, and completed fields for each row. Add error handling to display mutation errors to the user via toast or error message. Verify the mutation is awaited and the form state is properly reset after successful save. Ensure proper query invalidation triggers after save to refresh the schedule list."
         }
       ]
     },
     {
-      "id": "REQ-20",
-      "summary": "Update Today's Workout page to render set rows as a checklist and persist individual row completion state",
+      "id": "REQ-23",
+      "summary": "Audit and fix the createOrUpdateWorkoutSchedule mutation hook to ensure correct type serialization and field mapping for the setRows array",
       "acceptanceCriteria": [
-        "Today's Workout page shows each set row as a checkbox row with description text.",
-        "Clicking a checkbox immediately updates its visual state and calls the backend to persist the completed status for that specific row.",
-        "Completed rows show a visible completed style (strikethrough or dimmed text with a checked checkbox).",
-        "Unchecking a completed row marks it incomplete and persists the change.",
-        "If the workout entry has no structured set rows, the plain workoutDetails text is displayed as a fallback.",
-        "The checklist styling matches the existing dark, high-energy fitness theme."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/TodaysWorkout.tsx",
-          "operation": "modify",
-          "description": "Check if the current workout entry has setRows. If setRows exist and have length > 0, render each SetRow as a checkbox row (using a Checkbox component from frontend/src/components/ui if available, or a native checkbox). Display the setRow.description text next to each checkbox. Bind the checkbox checked state to setRow.completed. On checkbox change, call the useMarkSetRowComplete mutation hook (passing the workout ID, setRow.id, and the new completed boolean). Apply a completed style (e.g., line-through text decoration and muted text color) to completed rows. If setRows is empty or undefined, fall back to displaying the plain workoutDetails text as before. Ensure the styling uses the existing dark fitness theme colors and maintains visual consistency with the rest of the app."
-        }
-      ]
-    },
-    {
-      "id": "REQ-21",
-      "summary": "Add React Query mutation hook for toggling individual set row completion status",
-      "acceptanceCriteria": [
-        "A mutation hook exists for toggling a set row's completed state, accepting a schedule entry ID and set row ID.",
-        "On mutation success, the workout schedule query cache is invalidated so Today's Workout and Schedule pages reflect the updated state.",
-        "The hook handles loading and error states."
+        "The `createScheduleEntry` and `updateScheduleEntry` mutation hooks correctly serialize all fields including `setRows` to match the backend Candid interface.",
+        "No TypeScript type errors exist in the mutation hooks related to schedule entry payloads.",
+        "A schedule entry with an empty `setRows` array saves successfully.",
+        "A schedule entry with one or more set rows saves successfully and the rows are returned on subsequent fetch."
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Add a new mutation hook useMarkSetRowComplete that calls actor.markSetRowComplete(workoutId, rowId, completed). The hook should accept parameters { workoutId: string, rowId: bigint, completed: boolean }. On success, invalidate the 'workoutSchedules' query key to trigger a refetch of the workout schedule data. Include standard error handling and return isLoading and error states from the mutation. Follow the existing pattern used by other mutation hooks in this file."
+          "description": "Audit the useCreateOrUpdateWorkoutSchedule mutation hook to ensure the WorkoutSchedule payload matches the backend interface exactly. Verify that setRows is typed as Array<SetRow> with id (bigint), description (string), and completed (boolean) fields. Ensure dayOfWeek is correctly mapped to the DayOfWeek enum. Verify owner field is set to the caller's Principal. Add proper error handling and logging for mutation failures. Ensure the mutation properly invalidates the 'workoutSchedules' query key after successful save."
         }
       ]
     }

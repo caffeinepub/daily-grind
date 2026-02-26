@@ -3,7 +3,7 @@ import { TrendingUp, Flame, CheckCircle2, Target, Calendar } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress as ProgressBar } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useGetWorkoutSchedules, useGetCallerUserProfile, useUserTier } from '../hooks/useQueries';
+import { useGetWorkoutSchedules, useGetCallerUserProfile, useGetUserTier } from '../hooks/useQueries';
 import { DayOfWeek, WorkoutSchedule } from '../backend';
 import TierBadge from '../components/TierBadge';
 
@@ -54,7 +54,7 @@ function calculateWeeklyProgress(schedules: WorkoutSchedule[]): {
 export default function Progress() {
   const { data: schedules, isLoading } = useGetWorkoutSchedules();
   const { data: userProfile } = useGetCallerUserProfile();
-  const { data: tier } = useUserTier();
+  const { data: tier } = useGetUserTier();
 
   const todayDayOfWeek = getTodayDayOfWeek();
 

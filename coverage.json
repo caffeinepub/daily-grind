@@ -1,25 +1,18 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T01:52:31.764Z",
+  "generatedAt": "2026-02-26T02:03:38.991Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 3,
+    "total": 2,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-18",
-        "summary": "Extend the workout schedule backend data model so that each schedule entry's workout details field supports an array of structured set rows. Each set row must have a unique ID, a text description (e.g., '3x10 Bench Press'), and a completed boolean. Update the `WorkoutSchedule` type and all relevant CRUD API functions (`createScheduleEntry`, `updateScheduleEntry`, `getScheduleForUser`) to accept and return set rows. The existing plain-text `workoutDetails` field must remain backward-compatible (entries without set rows continue to work).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-19",
-        "summary": "Update the Schedule page (`frontend/src/pages/Schedule.tsx`) so that when a user creates or edits a workout entry, the workout details section renders as a dynamic list of set-row inputs instead of a single textarea. Each row has a text input for the set description (e.g., '3x10 Bench Press'). Users can add new rows with an '+ Add Set' button and remove existing rows with a delete/trash icon per row. On save, the rows are persisted to the backend as structured set rows via the updated mutation hook.",
+        "id": "REQ-22",
+        "summary": "Diagnose and fix the bug in `frontend/src/pages/Schedule.tsx` that prevents users from saving workout entries. Inspect the save/submit handler, the mutation hook invocation (in `frontend/src/hooks/useQueries.ts`), and the data shape being passed to the backend (including the new `setRows` array field). Ensure the mutation correctly calls the backend `createScheduleEntry` or `updateScheduleEntry` function with a valid payload — including all required fields (`day`, `workoutName`, `workoutDetails`, `timeReminder`, `setRows`) — and that errors are surfaced to the user rather than silently swallowed. After fixing, the Save button must successfully persist the entry and trigger a schedule query invalidation/refetch.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/Schedule.tsx"
@@ -29,19 +22,8 @@
         ]
       },
       {
-        "id": "REQ-20",
-        "summary": "Update the Today's Workout page (`frontend/src/pages/TodaysWorkout.tsx`) to render the workout's set rows as a vertical checklist. Each set row is displayed as a row with a checkbox and its description text. Checking a checkbox marks that individual set row as completed and persists the change to the backend. Completed rows are visually distinguished (e.g., strikethrough text and a muted/checked style consistent with the app's dark fitness theme). If the entry has no set rows, fall back to displaying the plain workout details text as before.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/TodaysWorkout.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/TodaysWorkout.tsx"
-        ]
-      },
-      {
-        "id": "REQ-21",
-        "summary": "Add or update React Query hooks in `frontend/src/hooks/useQueries.ts` to support set-row operations: a mutation to toggle a single set row's completed status (by schedule entry ID and row ID), and ensure the existing schedule query is invalidated/refetched after the toggle so the UI stays in sync.",
+        "id": "REQ-23",
+        "summary": "Audit the mutation hook(s) in `frontend/src/hooks/useQueries.ts` responsible for creating and updating schedule entries. Ensure the argument types match the updated `WorkoutSchedule` backend type that includes the `setRows` field. Fix any type mismatches, missing fields, or incorrect argument serialization that could cause the Candid call to fail silently or throw.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/hooks/useQueries.ts"
@@ -53,22 +35,15 @@
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
-    "build-template/README.md",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
+    "frontend/src/App.tsx",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/Progress.tsx",
     "frontend/src/pages/Schedule.tsx",
-    "frontend/src/pages/TodaysWorkout.tsx",
+    "frontend/src/pages/Settings.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

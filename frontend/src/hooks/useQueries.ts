@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { WorkoutSchedule, UserProfile } from '../backend';
+import { WorkoutSchedule, UserProfile, SetRow, DayOfWeek } from '../backend';
+import { Principal } from '@dfinity/principal';
+
+// ── Workout Schedules ──────────────────────────────────────────────────────
 
 export function useGetWorkoutSchedules() {
   const { actor, isFetching } = useActor();
@@ -22,22 +25,25 @@ export function useCreateOrUpdateWorkoutSchedule() {
   return useMutation({
     mutationFn: async ({ id, schedule }: { id: string; schedule: WorkoutSchedule }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createOrUpdateWorkoutSchedule(id, schedule);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
-    },
-  });
-}
 
-export function useDeleteWorkoutSchedule() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
+      // Ensure setRows ids are bigint and all fields are correct
+      const normalizedSetRows: SetRow[] = (schedule.setRows ?? []).map((row, index) => ({
+        id: typeof row.id === 'bigint' ? row.id : BigInt(index),
+        description: row.description ?? '',
+        completed: row.completed ?? false,
+      }));
 
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.deleteWorkoutSchedule(id);
+      const payload: WorkoutSchedule = {
+        dayOfWeek: schedule.dayOfWeek,
+        workoutName: schedule.workoutName,
+        workoutDetails: schedule.workoutDetails,
+        timeReminder: schedule.timeReminder,
+        completed: schedule.completed ?? false,
+        setRows: normalizedSetRows,
+        owner: Principal.anonymous(), // backend overwrites with caller
+      };
+
+      await actor.createOrUpdateWorkoutSchedule(id, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
@@ -52,7 +58,7 @@ export function useMarkWorkoutComplete() {
   return useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.markWorkoutComplete(id, completed);
+      await actor.markWorkoutComplete(id, completed);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
@@ -75,13 +81,30 @@ export function useMarkSetRowComplete() {
       completed: boolean;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.markSetRowComplete(workoutId, rowId, completed);
+      await actor.markSetRowComplete(workoutId, rowId, completed);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
     },
   });
 }
+
+export function useDeleteWorkoutSchedule() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.deleteWorkoutSchedule(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
+    },
+  });
+}
+
+// ── Motivational Messages ──────────────────────────────────────────────────
 
 export function useGetRandomMotivationalMessage() {
   const { actor, isFetching } = useActor();
@@ -95,6 +118,8 @@ export function useGetRandomMotivationalMessage() {
     enabled: !!actor && !isFetching,
   });
 }
+
+// ── User Profile ───────────────────────────────────────────────────────────
 
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
@@ -123,7 +148,7 @@ export function useSaveCallerUserProfile() {
   return useMutation({
     mutationFn: async (profile: UserProfile) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.saveCallerUserProfile(profile);
+      await actor.saveCallerUserProfile(profile);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
@@ -131,20 +156,22 @@ export function useSaveCallerUserProfile() {
   });
 }
 
-export function useUserTier() {
+// ── Tier ───────────────────────────────────────────────────────────────────
+
+export function useGetUserTier() {
   const { actor, isFetching } = useActor();
 
   return useQuery({
     queryKey: ['userTier'],
     queryFn: async () => {
-      if (!actor) return null;
+      if (!actor) throw new Error('Actor not available');
       return actor.getUserTier();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useEvaluateTier() {
+export function useEvaluateAndAdvanceTier() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
