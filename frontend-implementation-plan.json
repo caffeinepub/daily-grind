@@ -1,40 +1,43 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix: Unable to save workout entries on Schedule page",
+  "title": "Fix 'Not Found' grey screen on Today's Workout page after navigation",
   "requirements": [
     {
-      "id": "REQ-22",
-      "summary": "Fix the save handler in Schedule.tsx to properly persist workout entries with all required fields including setRows, and ensure errors are surfaced to the user",
+      "id": "REQ-37",
+      "summary": "Fix the routing configuration in App.tsx so that the root route (/) reliably renders the Today's Workout page on every visit, including when the user navigates away to another tab and returns, without falling through to a 'Not Found' state",
       "acceptanceCriteria": [
-        "Clicking Save on a new or edited workout entry in the Schedule page successfully persists the entry to the backend without errors.",
-        "After saving, the updated entry is visible in the schedule list (query is invalidated and refetched).",
-        "If a backend error occurs, an error message is shown to the user.",
-        "Entries with set rows (structured list) and entries without set rows (plain workoutDetails) both save correctly.",
-        "The Save button does not remain in a loading/disabled state after a successful save."
+        "Navigating to the Schedule, Progress, or Settings page and then clicking the Today nav link renders the Today's Workout page without any 'Not Found' screen.",
+        "The Today's Workout page content is identical on first load and on return navigation.",
+        "No grey screen or 'Not Found' text appears at any point during normal in-app navigation."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Schedule.tsx",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Fix the handleSave function to correctly structure the workout entry payload with all required fields (day, workoutName, workoutDetails, timeReminder, setRows). Ensure the setRows array is properly formatted with id, description, and completed fields for each row. Add error handling to display mutation errors to the user via toast or error message. Verify the mutation is awaited and the form state is properly reset after successful save. Ensure proper query invalidation triggers after save to refresh the schedule list."
+          "description": "Review and fix the root route configuration to ensure it always renders the TodaysWorkout page component on every visit to `/`, including after navigating away and returning. Verify that the route path, component assignment, and routing library setup are correctly configured to prevent fallthrough to a 'Not Found' handler. Ensure the route is registered before any catch-all or 404 routes."
         }
       ]
     },
     {
-      "id": "REQ-23",
-      "summary": "Audit and fix the createOrUpdateWorkoutSchedule mutation hook to ensure correct type serialization and field mapping for the setRows array",
+      "id": "REQ-38",
+      "summary": "Ensure that the Today's Workout page always reflects the latest backend schedule data after the user returns from the Schedule page by setting staleTime to 0 on the schedule query and ensuring all schedule mutation hooks invalidate the same query key",
       "acceptanceCriteria": [
-        "The `createScheduleEntry` and `updateScheduleEntry` mutation hooks correctly serialize all fields including `setRows` to match the backend Candid interface.",
-        "No TypeScript type errors exist in the mutation hooks related to schedule entry payloads.",
-        "A schedule entry with an empty `setRows` array saves successfully.",
-        "A schedule entry with one or more set rows saves successfully and the rows are returned on subsequent fetch."
+        "After saving a new or edited workout entry on the Schedule page, navigating to the Today tab shows the updated workout name, details, and time reminder without requiring a manual page refresh.",
+        "The schedule query key in TodaysWorkout.tsx matches exactly the key invalidated by all schedule mutation hooks in useQueries.ts.",
+        "The schedule query on the Today page has staleTime set to 0 or a very short duration so stale data is never displayed on mount.",
+        "Marking a workout as completed on the Today page is reflected immediately and persists after navigating away and back."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/pages/TodaysWorkout.tsx",
+          "operation": "modify",
+          "description": "Review the React Query configuration for the workout schedule query used by TodaysWorkout. Ensure it fetches the latest schedule data on every mount by setting staleTime to 0. Verify that the query key used here exactly matches the key invalidated by mutation hooks in useQueries.ts. If the current implementation uses a different query or no explicit staleTime, update it to guarantee fresh data on navigation."
+        },
+        {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Audit the useCreateOrUpdateWorkoutSchedule mutation hook to ensure the WorkoutSchedule payload matches the backend interface exactly. Verify that setRows is typed as Array<SetRow> with id (bigint), description (string), and completed (boolean) fields. Ensure dayOfWeek is correctly mapped to the DayOfWeek enum. Verify owner field is set to the caller's Principal. Add proper error handling and logging for mutation failures. Ensure the mutation properly invalidates the 'workoutSchedules' query key after successful save."
+          "description": "Review all schedule mutation hooks (create, update, delete, mark complete) and ensure each one calls queryClient.invalidateQueries with the exact same schedule query key used by TodaysWorkout.tsx. Verify that the query key structure is consistent across all hooks. If any mutation hook is missing the invalidation call or uses a different key, update it to ensure TodaysWorkout always refetches after mutations."
         }
       ]
     }

@@ -1,58 +1,57 @@
 {
   "kind": "build_request",
-  "title": "Fix: Unable to save workout entries on Schedule page",
+  "title": "Fix 'Not Found' grey screen on Today's Workout page after navigation",
   "projectName": "Daily Grind",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-22",
-      "text": "Diagnose and fix the bug in `frontend/src/pages/Schedule.tsx` that prevents users from saving workout entries. Inspect the save/submit handler, the mutation hook invocation (in `frontend/src/hooks/useQueries.ts`), and the data shape being passed to the backend (including the new `setRows` array field). Ensure the mutation correctly calls the backend `createScheduleEntry` or `updateScheduleEntry` function with a valid payload — including all required fields (`day`, `workoutName`, `workoutDetails`, `timeReminder`, `setRows`) — and that errors are surfaced to the user rather than silently swallowed. After fixing, the Save button must successfully persist the entry and trigger a schedule query invalidation/refetch.",
+      "id": "REQ-37",
+      "text": "Fix the routing configuration in `frontend/src/App.tsx` so that the root route (`/`) reliably renders the Today's Workout page on every visit — including when the user navigates away to another tab (Schedule, Progress, Settings) and then returns. The route must not fall through to a 'Not Found' state on re-visit.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "its not letting me save the workout"
+          "after I switch out of the Today section I am met with a grey screen that says not found"
         ]
       },
       "acceptanceCriteria": [
-        "Clicking Save on a new or edited workout entry in the Schedule page successfully persists the entry to the backend without errors.",
-        "After saving, the updated entry is visible in the schedule list (query is invalidated and refetched).",
-        "If a backend error occurs, an error message is shown to the user.",
-        "Entries with set rows (structured list) and entries without set rows (plain workoutDetails) both save correctly.",
-        "The Save button does not remain in a loading/disabled state after a successful save."
+        "Navigating to the Schedule, Progress, or Settings page and then clicking the Today nav link renders the Today's Workout page without any 'Not Found' screen.",
+        "The Today's Workout page content is identical on first load and on return navigation.",
+        "No grey screen or 'Not Found' text appears at any point during normal in-app navigation."
       ]
     },
     {
-      "id": "REQ-23",
-      "text": "Audit the mutation hook(s) in `frontend/src/hooks/useQueries.ts` responsible for creating and updating schedule entries. Ensure the argument types match the updated `WorkoutSchedule` backend type that includes the `setRows` field. Fix any type mismatches, missing fields, or incorrect argument serialization that could cause the Candid call to fail silently or throw.",
+      "id": "REQ-38",
+      "text": "Ensure that the Today's Workout page (`frontend/src/pages/TodaysWorkout.tsx`) always reflects the latest backend schedule data after the user returns from the Schedule page. The React Query schedule query used by TodaysWorkout must have a `staleTime` of 0 (or equivalent) so it refetches from the backend on every mount, and all schedule mutation hooks in `frontend/src/hooks/useQueries.ts` (create, update, delete, mark complete) must call `queryClient.invalidateQueries` with the exact same schedule query key used by TodaysWorkout.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "its not letting me save the workout"
+          "updates after changes are made in the schedule",
+          "looks the same as it does at the start and updates after changes are made in the schedule"
         ]
       },
       "acceptanceCriteria": [
-        "The `createScheduleEntry` and `updateScheduleEntry` mutation hooks correctly serialize all fields including `setRows` to match the backend Candid interface.",
-        "No TypeScript type errors exist in the mutation hooks related to schedule entry payloads.",
-        "A schedule entry with an empty `setRows` array saves successfully.",
-        "A schedule entry with one or more set rows saves successfully and the rows are returned on subsequent fetch."
+        "After saving a new or edited workout entry on the Schedule page, navigating to the Today tab shows the updated workout name, details, and time reminder without requiring a manual page refresh.",
+        "The schedule query key in TodaysWorkout.tsx matches exactly the key invalidated by all schedule mutation hooks in useQueries.ts.",
+        "The schedule query on the Today page has staleTime set to 0 or a very short duration so stale data is never displayed on mount.",
+        "Marking a workout as completed on the Today page is reflected immediately and persists after navigating away and back."
       ]
     }
   ],
   "constraints": [
-    "Do not change the backend Motoko data model or API signatures unless a bug is found there that directly causes the save failure.",
-    "Do not modify files listed in frontend.immutablePaths.",
-    "Preserve backward compatibility for entries without set rows."
+    "Do not modify any files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "Do not change the backend schema or Motoko code.",
+    "Preserve the existing dark fitness visual theme consistently across all pages."
   ],
   "nonGoals": [
-    "Adding new schedule features or UI changes beyond what is needed to fix the save bug.",
-    "Changes to the Today's Workout page or Progress page.",
-    "Modifying the notification system."
+    "Adding new features to the Today's Workout page beyond what is already implemented.",
+    "Changing the Schedule page UI or editing workflow.",
+    "Modifying backend API functions or data models."
   ],
   "imageRequirements": {
     "required": [],

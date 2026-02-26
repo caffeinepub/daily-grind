@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 13,
+  "projectStateVersion": 23,
   "summary": "Building 'Daily Grind' — a daily workout reminder app with weekly workout schedule, today's workout view, mark-as-completed, motivational messages, progress tracking, and user authentication.",
   "architectural_notes": [
     "Three data tables: Workout Schedule, Motivation Messages, User",
@@ -8,7 +8,7 @@
     "Tier progression: 22 tiers total (Dirt through Anti-matter), computed weekly based on schedule completion rate"
   ],
   "known_issues": [
-    "Saving a workout is broken — users are unable to save workout entries"
+    "Today page shows 'Not found' after updating the schedule — schedule query cache is not being invalidated/refetched on the Today page after a schedule mutation"
   ],
   "isFixRequest": true,
   "existing_features": [
@@ -147,6 +147,88 @@
         "REQ-23"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-restore-frontend-src-pages-todaysworkout-tsx-to-a-fully-working-state-the-page-must-1-auto-match-the-current-day-of-the-week-from-the-client-s-local-date-to-the-user-s-workout-schedule-entry-for-that-day-2-display-the-workout-name-time-reminder-and-workout-details-3-render-set-rows-as-a-vertical-checklist-where-each-row-has-a-checkbox-and-description-text-checking-a-checkbox-marks-that-individual-set-row-as-completed-and-persists-the-change-via-the-backend-mutation-with-completed-rows-shown-with-strikethrough-text-and-a-muted-style-4-fall-back-to-displaying-plain-workoutdetails-text-if-there-are-no-set-rows-5-include-a-mark-as-completed-button-that-marks-the-entire-entry-as-completed-6-display-a-refreshable-random-motivational-message-banner-7-show-a-friendly-placeholder-message-if-no-workout-is-scheduled-for-today-ensure-all-query-and-mutation-hooks-used-are-correctly-imported-from-frontend-src-hooks-usequeries-ts-and-that-no-type-errors-or-runtime-crashes-occur",
+      "title": "Restore `frontend/src/pages/TodaysWorkout.tsx` to a fully working state. The page must: (1) auto-match the current day of the week from the client's local date to the user's workout schedule entry for that day; (2) display the workout name, time reminder, and workout details; (3) render set rows as a vertical checklist where each row has a checkbox and description text — checking a checkbox marks that individual set row as completed and persists the change via the backend mutation, with completed rows shown with strikethrough text and a muted style; (4) fall back to displaying plain `workoutDetails` text if there are no set rows; (5) include a 'Mark as Completed ✅' button that marks the entire entry as completed; (6) display a refreshable random motivational message banner; (7) show a friendly placeholder message if no workout is scheduled for today. Ensure all query and mutation hooks used are correctly imported from `frontend/src/hooks/useQueries.ts` and that no type errors or runtime crashes occur.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-that-whenever-a-schedule-entry-is-created-updated-or-deleted-on-the-schedule-page-the-schedule-query-cache-used-by-the-today-s-workout-page-is-fully-invalidated-and-refetched-in-frontend-src-hooks-usequeries-ts-audit-all-mutation-hooks-for-schedule-crud-operations-create-update-delete-mark-complete-toggle-set-row-and-confirm-each-one-calls-queryclient-invalidatequeries-on-the-schedule-query-key-after-a-successful-mutation-if-any-mutation-is-missing-this-invalidation-add-it-so-the-today-s-workout-page-always-reflects-the-latest-backend-data-without-requiring-a-manual-page-refresh",
+      "title": "Ensure that whenever a schedule entry is created, updated, or deleted on the Schedule page, the schedule query cache used by the Today's Workout page is fully invalidated and refetched. In `frontend/src/hooks/useQueries.ts`, audit all mutation hooks for schedule CRUD operations (create, update, delete, mark complete, toggle set row) and confirm each one calls `queryClient.invalidateQueries` on the schedule query key after a successful mutation. If any mutation is missing this invalidation, add it so the Today's Workout page always reflects the latest backend data without requiring a manual page refresh.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-revert-frontend-src-pages-todaysworkout-tsx-to-its-exact-draft-4-implementation-remove-all-changes-introduced-after-draft-4-including-any-optimistic-ui-updates-query-key-changes-staletime-adjustments-or-structural-refactors-added-in-versions-5-through-8",
+      "title": "Revert `frontend/src/pages/TodaysWorkout.tsx` to its exact Draft 4 implementation. Remove all changes introduced after Draft 4, including any optimistic UI updates, query key changes, staleTime adjustments, or structural refactors added in versions 5 through 8.",
+      "reqIds": [
+        "REQ-27",
+        "REQ-32"
+      ],
+      "version": 2
+    },
+    {
+      "id": "feature-revert-frontend-src-pages-schedule-tsx-to-its-exact-draft-4-implementation-remove-all-post-draft-4-changes-including-any-save-handler-fixes-mutation-invocation-changes-or-set-row-ui-modifications-added-in-versions-5-through-8",
+      "title": "Revert `frontend/src/pages/Schedule.tsx` to its exact Draft 4 implementation. Remove all post-Draft 4 changes including any save-handler fixes, mutation invocation changes, or set-row UI modifications added in versions 5 through 8.",
+      "reqIds": [
+        "REQ-28",
+        "REQ-33"
+      ],
+      "version": 2
+    },
+    {
+      "id": "feature-revert-frontend-src-hooks-usequeries-ts-to-its-exact-draft-4-implementation-remove-all-post-draft-4-changes-including-any-query-key-alignment-fixes-invalidation-additions-set-row-mutation-hooks-or-type-corrections-added-in-versions-5-through-8",
+      "title": "Revert `frontend/src/hooks/useQueries.ts` to its exact Draft 4 implementation. Remove all post-Draft 4 changes including any query key alignment fixes, invalidation additions, set-row mutation hooks, or type corrections added in versions 5 through 8.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-revert-all-remaining-frontend-files-that-were-modified-after-draft-4-including-but-not-limited-to-frontend-src-pages-progress-tsx-frontend-src-pages-settings-tsx-frontend-src-components-applayout-tsx-frontend-public-sw-js-and-any-other-files-changed-in-versions-5-through-8-to-their-exact-draft-4-state",
+      "title": "Revert all remaining frontend files that were modified after Draft 4 — including but not limited to `frontend/src/pages/Progress.tsx`, `frontend/src/pages/Settings.tsx`, `frontend/src/components/AppLayout.tsx`, `frontend/public/sw.js`, and any other files changed in versions 5 through 8 — to their exact Draft 4 state.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-revert-frontend-src-hooks-usequeries-ts-to-its-exact-draft-4-implementation-remove-all-post-draft-4-changes-including-query-key-alignment-fixes-invalidation-additions-set-row-mutation-hooks-or-type-corrections-added-in-versions-5-through-8",
+      "title": "Revert `frontend/src/hooks/useQueries.ts` to its exact Draft 4 implementation. Remove all post-Draft 4 changes including query key alignment fixes, invalidation additions, set-row mutation hooks, or type corrections added in versions 5 through 8.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-revert-all-remaining-frontend-files-that-were-modified-after-draft-4-including-frontend-src-pages-progress-tsx-frontend-src-pages-settings-tsx-frontend-src-components-applayout-tsx-frontend-public-sw-js-and-any-other-frontend-files-changed-in-versions-5-through-8-to-their-exact-draft-4-state",
+      "title": "Revert all remaining frontend files that were modified after Draft 4 — including `frontend/src/pages/Progress.tsx`, `frontend/src/pages/Settings.tsx`, `frontend/src/components/AppLayout.tsx`, `frontend/public/sw.js`, and any other frontend files changed in versions 5 through 8 — to their exact Draft 4 state.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-routing-configuration-in-frontend-src-app-tsx-so-that-the-root-route-reliably-renders-the-today-s-workout-page-on-every-visit-including-when-the-user-navigates-away-to-another-tab-schedule-progress-settings-and-then-returns-the-route-must-not-fall-through-to-a-not-found-state-on-re-visit",
+      "title": "Fix the routing configuration in `frontend/src/App.tsx` so that the root route (`/`) reliably renders the Today's Workout page on every visit — including when the user navigates away to another tab (Schedule, Progress, Settings) and then returns. The route must not fall through to a 'Not Found' state on re-visit.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-that-the-today-s-workout-page-frontend-src-pages-todaysworkout-tsx-always-reflects-the-latest-backend-schedule-data-after-the-user-returns-from-the-schedule-page-the-react-query-schedule-query-used-by-todaysworkout-must-have-a-staletime-of-0-or-equivalent-so-it-refetches-from-the-backend-on-every-mount-and-all-schedule-mutation-hooks-in-frontend-src-hooks-usequeries-ts-create-update-delete-mark-complete-must-call-queryclient-invalidatequeries-with-the-exact-same-schedule-query-key-used-by-todaysworkout",
+      "title": "Ensure that the Today's Workout page (`frontend/src/pages/TodaysWorkout.tsx`) always reflects the latest backend schedule data after the user returns from the Schedule page. The React Query schedule query used by TodaysWorkout must have a `staleTime` of 0 (or equivalent) so it refetches from the backend on every mount, and all schedule mutation hooks in `frontend/src/hooks/useQueries.ts` (create, update, delete, mark complete) must call `queryClient.invalidateQueries` with the exact same schedule query key used by TodaysWorkout.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -261,6 +343,30 @@
       "summary": "Extend the workout schedule backend data model so that each schedule entry's workout details field supports an array of structured set rows. Each set row must have a unique ID, a text description (e.g., '3x10 Bench Press'), and a completed boolean. Update the `WorkoutSchedule` type and all relevant CRUD API functions (`createScheduleEntry`, `updateScheduleEntry`, `getScheduleForUser`) to accept and return set rows. The existing plain-text `workoutDetails` field must remain backward-compatible (entries without set rows continue to work).",
       "reqIds": [
         "REQ-18"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "In `frontend/src/pages/TodaysWorkout.tsx`, verify that the query key used to fetch the user's schedule matches exactly the query key invalidated by the schedule mutation hooks in `frontend/src/hooks/useQueries.ts`. If there is a mismatch (e.g., different key strings or key shapes), align them so that invalidation on the Schedule page triggers a fresh fetch on the Today page. Also ensure the Today page does not cache stale data by setting an appropriate `staleTime` (e.g., 0 or a short duration) on the schedule query used by this page.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Revert `backend/main.mo` to its exact Draft 4 implementation. Remove all post-Draft 4 backend changes including any set-row data model extensions, new API functions, or type modifications added in versions 5 through 8.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-28",
+      "summary": "Revert `backend/main.mo` to its exact Draft 4 implementation. Remove all post-Draft 4 backend changes including any set-row data model extensions (`SetRow` type, `setRows` field on `WorkoutSchedule`), new API functions, or type modifications added in versions 5 through 8.",
+      "reqIds": [
+        "REQ-36"
       ],
       "status": "pending"
     }

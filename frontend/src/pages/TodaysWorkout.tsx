@@ -2,14 +2,12 @@ import { useState } from 'react';
 import {
   useGetWorkoutSchedules,
   useMarkWorkoutComplete,
-  useMarkSetRowComplete,
   useGetRandomMotivationalMessage,
 } from '../hooks/useQueries';
 import { DayOfWeek, WorkoutSchedule } from '../backend';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, RefreshCw, Clock, Dumbbell, Flame, Calendar } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -47,57 +45,9 @@ function getTodayDayOfWeek(): DayOfWeek {
   return map[d];
 }
 
+// Must match the stable ID format used in Schedule.tsx: `${day}-entry`
 function getWorkoutId(schedule: WorkoutSchedule): string {
-  return `schedule-${schedule.dayOfWeek}`;
-}
-
-interface SetRowCheckboxProps {
-  workoutId: string;
-  rowId: bigint;
-  description: string;
-  completed: boolean;
-}
-
-function SetRowCheckbox({ workoutId, rowId, description, completed }: SetRowCheckboxProps) {
-  const markSetRow = useMarkSetRowComplete();
-  const [optimisticChecked, setOptimisticChecked] = useState<boolean | null>(null);
-
-  const isChecked = optimisticChecked !== null ? optimisticChecked : completed;
-
-  const handleChange = async (checked: boolean) => {
-    setOptimisticChecked(checked);
-    try {
-      await markSetRow.mutateAsync({ workoutId, rowId, completed: checked });
-    } catch {
-      // Revert on error
-      setOptimisticChecked(!checked);
-    }
-  };
-
-  return (
-    <div
-      className={`flex items-center gap-3 py-2 px-3 rounded-lg transition-all ${
-        isChecked ? 'bg-success/10' : 'bg-background/40 hover:bg-background/60'
-      }`}
-    >
-      <Checkbox
-        id={`row-${workoutId}-${rowId}`}
-        checked={isChecked}
-        onCheckedChange={(val) => handleChange(val === true)}
-        disabled={markSetRow.isPending}
-        className="border-border data-[state=checked]:bg-success data-[state=checked]:border-success"
-      />
-      <label
-        htmlFor={`row-${workoutId}-${rowId}`}
-        className={`text-sm cursor-pointer flex-1 transition-all ${
-          isChecked ? 'line-through text-muted-foreground opacity-60' : 'text-foreground'
-        }`}
-      >
-        {description}
-      </label>
-      {isChecked && <CheckCircle2 className="w-4 h-4 text-success shrink-0" />}
-    </div>
-  );
+  return `${schedule.dayOfWeek}-entry`;
 }
 
 export default function TodaysWorkout() {
@@ -108,7 +58,6 @@ export default function TodaysWorkout() {
   const queryClient = useQueryClient();
 
   const todayEntry = schedules.find((s) => s.dayOfWeek === today) ?? null;
-  const hasSetRows = todayEntry?.setRows && todayEntry.setRows.length > 0;
 
   const handleToggleComplete = async () => {
     if (!todayEntry) return;
@@ -135,7 +84,8 @@ export default function TodaysWorkout() {
       <div>
         <h1 className="text-3xl font-display font-bold text-foreground tracking-tight">Today's Workout</h1>
         <p className="text-muted-foreground mt-1">
-          {DAY_LABELS[today]} — {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          {DAY_LABELS[today]} —{' '}
+          {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
         </p>
       </div>
 
@@ -164,7 +114,13 @@ export default function TodaysWorkout() {
 
       {/* Today's Workout Card */}
       {todayEntry ? (
-        <Card className={`border transition-all ${todayEntry.completed ? 'border-success/50 shadow-[0_0_16px_rgba(0,200,100,0.15)]' : 'border-primary/40 shadow-glow'}`}>
+        <Card
+          className={`border transition-all ${
+            todayEntry.completed
+              ? 'border-success/50 shadow-[0_0_16px_rgba(0,200,100,0.15)]'
+              : 'border-primary/40 shadow-glow'
+          }`}
+        >
           <CardHeader className="pb-2 pt-5 px-5">
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
@@ -191,37 +147,12 @@ export default function TodaysWorkout() {
           </CardHeader>
 
           <CardContent className="px-5 pb-5 space-y-4">
-            {/* Set rows checklist */}
-            {hasSetRows ? (
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                  Sets & Exercises
-                </p>
-                <div className="space-y-1 rounded-xl overflow-hidden border border-border/50">
-                  {todayEntry.setRows.map((row) => (
-                    <SetRowCheckbox
-                      key={String(row.id)}
-                      workoutId={getWorkoutId(todayEntry)}
-                      rowId={row.id}
-                      description={row.description}
-                      completed={row.completed}
-                    />
-                  ))}
-                </div>
-                {/* Progress indicator */}
-                <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
-                  <span>
-                    {todayEntry.setRows.filter((r) => r.completed).length} / {todayEntry.setRows.length} sets done
-                  </span>
-                  <span className="text-primary font-medium">
-                    {Math.round((todayEntry.setRows.filter((r) => r.completed).length / todayEntry.setRows.length) * 100)}%
-                  </span>
-                </div>
-              </div>
-            ) : todayEntry.workoutDetails ? (
-              /* Fallback: plain text details */
-              <p className="text-sm text-muted-foreground leading-relaxed">{todayEntry.workoutDetails}</p>
-            ) : null}
+            {/* Workout details */}
+            {todayEntry.workoutDetails && (
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {todayEntry.workoutDetails}
+              </p>
+            )}
 
             {/* Mark complete button */}
             <Button
@@ -246,7 +177,7 @@ export default function TodaysWorkout() {
               ) : (
                 <span className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
-                  Mark Workout Complete
+                  Mark Workout Complete ✅
                 </span>
               )}
             </Button>
@@ -257,7 +188,9 @@ export default function TodaysWorkout() {
           <CardContent className="py-12 text-center space-y-3">
             <Dumbbell className="w-12 h-12 text-muted-foreground/30 mx-auto" />
             <p className="text-muted-foreground">No workout scheduled for today.</p>
-            <p className="text-sm text-muted-foreground/60">Head to the Schedule page to add one!</p>
+            <p className="text-sm text-muted-foreground/60">
+              Head to the Schedule page to add one!
+            </p>
           </CardContent>
         </Card>
       )}
@@ -266,7 +199,9 @@ export default function TodaysWorkout() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="w-4 h-4 text-muted-foreground" />
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">This Week</h2>
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            This Week
+          </h2>
         </div>
         <div className="grid grid-cols-7 gap-1">
           {DAY_ORDER.map((day) => {
@@ -281,7 +216,9 @@ export default function TodaysWorkout() {
                     : 'bg-card border border-border/50'
                 }`}
               >
-                <span className={`text-xs font-medium ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                <span
+                  className={`text-xs font-medium ${isToday ? 'text-primary' : 'text-muted-foreground'}`}
+                >
                   {DAY_LABELS[day].slice(0, 3)}
                 </span>
                 <div
@@ -289,8 +226,8 @@ export default function TodaysWorkout() {
                     entry?.completed
                       ? 'bg-success/20'
                       : entry
-                      ? 'bg-primary/20'
-                      : 'bg-muted/30'
+                        ? 'bg-primary/20'
+                        : 'bg-muted/30'
                   }`}
                 >
                   {entry?.completed ? (

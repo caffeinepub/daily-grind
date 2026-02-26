@@ -91,7 +91,6 @@ export class ExternalBlob {
 }
 export interface WorkoutSchedule {
     workoutDetails: string;
-    setRows: Array<SetRow>;
     owner: Principal;
     dayOfWeek: DayOfWeek;
     completed: boolean;
@@ -102,11 +101,6 @@ export interface TierProgressionResult {
     direction: Variant_up_down_same;
     previousTier: Tier;
     newTier: Tier;
-}
-export interface SetRow {
-    id: bigint;
-    completed: boolean;
-    description: string;
 }
 export interface MotivationalMessage {
     id: bigint;
@@ -206,10 +200,6 @@ export interface backendInterface {
      */
     isNotificationsEnabled(): Promise<boolean>;
     /**
-     * / Update a specific set row as complete or incomplete. Only the owner may do this.
-     */
-    markSetRowComplete(workoutId: string, rowId: bigint, completed: boolean): Promise<void>;
-    /**
      * / Mark a specific workout as complete or incomplete. Only the owner may do this.
      */
     markWorkoutComplete(id: string, completed: boolean): Promise<void>;
@@ -219,7 +209,7 @@ export interface backendInterface {
      */
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
 }
-import type { DayOfWeek as _DayOfWeek, SetRow as _SetRow, Tier as _Tier, TierProgressionResult as _TierProgressionResult, UserProfile as _UserProfile, UserRole as _UserRole, WorkoutSchedule as _WorkoutSchedule } from "./declarations/backend.did.d.ts";
+import type { DayOfWeek as _DayOfWeek, Tier as _Tier, TierProgressionResult as _TierProgressionResult, UserProfile as _UserProfile, UserRole as _UserRole, WorkoutSchedule as _WorkoutSchedule } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -474,20 +464,6 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async markSetRowComplete(arg0: string, arg1: bigint, arg2: boolean): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.markSetRowComplete(arg0, arg1, arg2);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.markSetRowComplete(arg0, arg1, arg2);
-            return result;
-        }
-    }
     async markWorkoutComplete(arg0: string, arg1: boolean): Promise<void> {
         if (this.processError) {
             try {
@@ -537,7 +513,6 @@ function from_candid_opt_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 }
 function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     workoutDetails: string;
-    setRows: Array<_SetRow>;
     owner: Principal;
     dayOfWeek: _DayOfWeek;
     completed: boolean;
@@ -545,7 +520,6 @@ function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uin
     workoutName: string;
 }): {
     workoutDetails: string;
-    setRows: Array<SetRow>;
     owner: Principal;
     dayOfWeek: DayOfWeek;
     completed: boolean;
@@ -554,7 +528,6 @@ function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } {
     return {
         workoutDetails: value.workoutDetails,
-        setRows: value.setRows,
         owner: value.owner,
         dayOfWeek: from_candid_DayOfWeek_n16(_uploadFile, _downloadFile, value.dayOfWeek),
         completed: value.completed,
@@ -632,7 +605,6 @@ function to_candid_WorkoutSchedule_n3(_uploadFile: (file: ExternalBlob) => Promi
 }
 function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     workoutDetails: string;
-    setRows: Array<SetRow>;
     owner: Principal;
     dayOfWeek: DayOfWeek;
     completed: boolean;
@@ -640,7 +612,6 @@ function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
     workoutName: string;
 }): {
     workoutDetails: string;
-    setRows: Array<_SetRow>;
     owner: Principal;
     dayOfWeek: _DayOfWeek;
     completed: boolean;
@@ -649,7 +620,6 @@ function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 } {
     return {
         workoutDetails: value.workoutDetails,
-        setRows: value.setRows,
         owner: value.owner,
         dayOfWeek: to_candid_DayOfWeek_n5(_uploadFile, _downloadFile, value.dayOfWeek),
         completed: value.completed,

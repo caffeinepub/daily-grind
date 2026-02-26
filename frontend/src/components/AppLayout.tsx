@@ -27,7 +27,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link to="/today" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-glow group-hover:shadow-glow-lg transition-all">
               <img
                 src="/assets/generated/app-logo.dim_256x256.png"

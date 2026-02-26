@@ -13,11 +13,6 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
-export const SetRow = IDL.Record({
-  'id' : IDL.Nat,
-  'completed' : IDL.Bool,
-  'description' : IDL.Text,
-});
 export const DayOfWeek = IDL.Variant({
   'tuesday' : IDL.Null,
   'wednesday' : IDL.Null,
@@ -29,7 +24,6 @@ export const DayOfWeek = IDL.Variant({
 });
 export const WorkoutSchedule = IDL.Record({
   'workoutDetails' : IDL.Text,
-  'setRows' : IDL.Vec(SetRow),
   'owner' : IDL.Principal,
   'dayOfWeek' : DayOfWeek,
   'completed' : IDL.Bool,
@@ -100,7 +94,6 @@ export const idlService = IDL.Service({
   'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isNotificationsEnabled' : IDL.Func([], [IDL.Bool], ['query']),
-  'markSetRowComplete' : IDL.Func([IDL.Text, IDL.Nat, IDL.Bool], [], []),
   'markWorkoutComplete' : IDL.Func([IDL.Text, IDL.Bool], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
 });
@@ -113,11 +106,6 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
-  const SetRow = IDL.Record({
-    'id' : IDL.Nat,
-    'completed' : IDL.Bool,
-    'description' : IDL.Text,
-  });
   const DayOfWeek = IDL.Variant({
     'tuesday' : IDL.Null,
     'wednesday' : IDL.Null,
@@ -129,7 +117,6 @@ export const idlFactory = ({ IDL }) => {
   });
   const WorkoutSchedule = IDL.Record({
     'workoutDetails' : IDL.Text,
-    'setRows' : IDL.Vec(SetRow),
     'owner' : IDL.Principal,
     'dayOfWeek' : DayOfWeek,
     'completed' : IDL.Bool,
@@ -200,7 +187,6 @@ export const idlFactory = ({ IDL }) => {
     'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isNotificationsEnabled' : IDL.Func([], [IDL.Bool], ['query']),
-    'markSetRowComplete' : IDL.Func([IDL.Text, IDL.Nat, IDL.Bool], [], []),
     'markWorkoutComplete' : IDL.Func([IDL.Text, IDL.Bool], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   });

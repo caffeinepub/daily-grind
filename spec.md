@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the bug preventing users from saving workout entries on the Schedule page.
+**Goal:** Fix the "Not Found" grey screen on the Today's Workout page after navigating away and returning, and ensure the page always reflects the latest schedule data.
 
 **Planned changes:**
-- Diagnose and fix the save/submit handler in `Schedule.tsx` so it correctly invokes the mutation hook with a valid payload including all required fields (`day`, `workoutName`, `workoutDetails`, `timeReminder`, `setRows`).
-- Audit and fix the `createScheduleEntry` and `updateScheduleEntry` mutation hooks in `useQueries.ts` to ensure argument types and serialization match the backend Candid interface, including the `setRows` field.
-- Surface backend errors to the user instead of silently swallowing them.
-- Ensure a successful save triggers schedule query invalidation/refetch and resets the Save button state.
+- Fix the root route (`/`) configuration in `App.tsx` so navigating away and back to the Today tab never falls through to a "Not Found" state.
+- Set `staleTime` to `0` on the schedule query in `TodaysWorkout.tsx` so it refetches from the backend on every mount.
+- Update all schedule mutation hooks in `useQueries.ts` (create, update, delete, mark complete) to call `queryClient.invalidateQueries` using the exact same query key as the one used in `TodaysWorkout.tsx`.
 
-**User-visible outcome:** Users can successfully save new and edited workout entries (with or without set rows) on the Schedule page, see the updated entry reflected in the schedule list, and receive an error message if something goes wrong.
+**User-visible outcome:** Users can freely navigate between Today, Schedule, Progress, and Settings tabs without seeing a grey "Not Found" screen, and the Today's Workout page always shows up-to-date schedule data after changes are made on the Schedule page.

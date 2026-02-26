@@ -1,4 +1,4 @@
-import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
+import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet, redirect } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { useEffect } from 'react';
@@ -30,6 +30,14 @@ const rootRoute = createRootRoute({ component: RootLayout });
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
+  beforeLoad: () => {
+    throw redirect({ to: '/today' });
+  },
+});
+
+const todayRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/today',
   component: TodaysWorkout,
 });
 
@@ -51,7 +59,13 @@ const settingsRoute = createRoute({
   component: Settings,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, scheduleRoute, progressRoute, settingsRoute]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  todayRoute,
+  scheduleRoute,
+  progressRoute,
+  settingsRoute,
+]);
 const router = createRouter({ routeTree });
 
 declare module '@tanstack/react-router' {

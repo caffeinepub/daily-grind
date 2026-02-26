@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-diagnose-and-fix-the-bug-in-frontend-src-pages-schedule-tsx-that-prevents-users-from-saving-workout-entries-inspect-the-save-submit-handler-the-mutation-hook-invocation-in-frontend-src-hooks-usequeries-ts-and-the-data-shape-being-passed-to-the-backend-including-the-new-setrows-array-field-ensure-the-mutation-correctly-calls-the-backend-createscheduleentry-or-updatescheduleentry-function-with-a-valid-payload-including-all-required-fields-day-workoutname-workoutdetails-timereminder-setrows-and-that-errors-are-surfaced-to-the-user-rather-than-silently-swallowed-after-fixing-the-save-button-must-successfully-persist-the-entry-and-trigger-a-schedule-query-invalidation-refetch",
-      "featureTitle": "Diagnose and fix the bug in `frontend/src/pages/Schedule.tsx` that prevents users from saving workout entries. Inspect the save/submit handler, the mutation hook invocation (in `frontend/src/hooks/useQueries.ts`), and the data shape being passed to the backend (including the new `setRows` array field). Ensure the mutation correctly calls the backend `createScheduleEntry` or `updateScheduleEntry` function with a valid payload — including all required fields (`day`, `workoutName`, `workoutDetails`, `timeReminder`, `setRows`) — and that errors are surfaced to the user rather than silently swallowed. After fixing, the Save button must successfully persist the entry and trigger a schedule query invalidation/refetch.",
+      "featureId": "feature-fix-the-routing-configuration-in-frontend-src-app-tsx-so-that-the-root-route-reliably-renders-the-today-s-workout-page-on-every-visit-including-when-the-user-navigates-away-to-another-tab-schedule-progress-settings-and-then-returns-the-route-must-not-fall-through-to-a-not-found-state-on-re-visit",
+      "featureTitle": "Fix the routing configuration in `frontend/src/App.tsx` so that the root route (`/`) reliably renders the Today's Workout page on every visit — including when the user navigates away to another tab (Schedule, Progress, Settings) and then returns. The route must not fall through to a 'Not Found' state on re-visit.",
       "files": [
-        "frontend/src/pages/Schedule.tsx"
+        "frontend/src/App.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -16,13 +16,13 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-22"
+        "REQ-37"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-audit-the-mutation-hook-s-in-frontend-src-hooks-usequeries-ts-responsible-for-creating-and-updating-schedule-entries-ensure-the-argument-types-match-the-updated-workoutschedule-backend-type-that-includes-the-setrows-field-fix-any-type-mismatches-missing-fields-or-incorrect-argument-serialization-that-could-cause-the-candid-call-to-fail-silently-or-throw",
-      "featureTitle": "Audit the mutation hook(s) in `frontend/src/hooks/useQueries.ts` responsible for creating and updating schedule entries. Ensure the argument types match the updated `WorkoutSchedule` backend type that includes the `setRows` field. Fix any type mismatches, missing fields, or incorrect argument serialization that could cause the Candid call to fail silently or throw.",
+      "featureId": "feature-ensure-that-the-today-s-workout-page-frontend-src-pages-todaysworkout-tsx-always-reflects-the-latest-backend-schedule-data-after-the-user-returns-from-the-schedule-page-the-react-query-schedule-query-used-by-todaysworkout-must-have-a-staletime-of-0-or-equivalent-so-it-refetches-from-the-backend-on-every-mount-and-all-schedule-mutation-hooks-in-frontend-src-hooks-usequeries-ts-create-update-delete-mark-complete-must-call-queryclient-invalidatequeries-with-the-exact-same-schedule-query-key-used-by-todaysworkout",
+      "featureTitle": "Ensure that the Today's Workout page (`frontend/src/pages/TodaysWorkout.tsx`) always reflects the latest backend schedule data after the user returns from the Schedule page. The React Query schedule query used by TodaysWorkout must have a `staleTime` of 0 (or equivalent) so it refetches from the backend on every mount, and all schedule mutation hooks in `frontend/src/hooks/useQueries.ts` (create, update, delete, mark complete) must call `queryClient.invalidateQueries` with the exact same schedule query key used by TodaysWorkout.",
       "files": [
         "frontend/src/hooks/useQueries.ts"
       ],
@@ -35,7 +35,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-23"
+        "REQ-38"
       ],
       "confidence": "high"
     }

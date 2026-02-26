@@ -9,7 +9,6 @@ export interface None {
 export type Option<T> = Some<T> | None;
 export interface WorkoutSchedule {
     workoutDetails: string;
-    setRows: Array<SetRow>;
     owner: Principal;
     dayOfWeek: DayOfWeek;
     completed: boolean;
@@ -20,11 +19,6 @@ export interface TierProgressionResult {
     direction: Variant_up_down_same;
     previousTier: Tier;
     newTier: Tier;
-}
-export interface SetRow {
-    id: bigint;
-    completed: boolean;
-    description: string;
 }
 export interface MotivationalMessage {
     id: bigint;
@@ -122,10 +116,6 @@ export interface backendInterface {
      * / profile directly.
      */
     isNotificationsEnabled(): Promise<boolean>;
-    /**
-     * / Update a specific set row as complete or incomplete. Only the owner may do this.
-     */
-    markSetRowComplete(workoutId: string, rowId: bigint, completed: boolean): Promise<void>;
     /**
      * / Mark a specific workout as complete or incomplete. Only the owner may do this.
      */

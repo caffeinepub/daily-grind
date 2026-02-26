@@ -1,27 +1,16 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T02:03:38.987Z",
-  "summary": "The diff addresses both REQ-22 and REQ-23 by fixing the save handler in Schedule.tsx and updating the mutation hook in useQueries.ts to include the setRows field with proper bigint normalization, query invalidation, and error surfacing. The implementation appears largely complete for both requirements.",
-  "missing_requirements": [
-    {
-      "id": "REQ-22",
-      "requirement": "If a backend error occurs, an error message is shown to the user rather than silently swallowed.",
-      "reason": "The Schedule.tsx diff is truncated and the handleSave function body is not fully visible. The file summary mentions 'proper error display' but the actual try/catch and error surfacing code in handleSave cannot be confirmed from the truncated diff. The saveError state variable is declared and setSaveError is called in startEdit/cancelEdit, but the onError handler in the mutation or try/catch around mutateAsync is not visible in the truncated content.",
-      "evidence": [
-        "frontend/src/pages/Schedule.tsx"
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-26T02:56:13.913Z",
+  "summary": "Both REQ-37 and REQ-38 appear to be implemented in the diff. REQ-37 is addressed by fixing App.tsx to use a dedicated /today route with the root / redirecting to /today, eliminating the Not Found fallthrough. REQ-38 is addressed by setting staleTime: 0 on useGetWorkoutSchedules and ensuring all mutation hooks call queryClient.invalidateQueries with the same workoutSchedules key.",
+  "missing_requirements": [],
   "hallucinated_features": [],
-  "confidence": 0.72,
+  "confidence": 0.88,
   "changed_files": [
     "frontend-file-summaries.txt",
     "frontend/src/App.tsx",
+    "frontend/src/components/AppLayout.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/Progress.tsx",
-    "frontend/src/pages/Schedule.tsx",
-    "frontend/src/pages/Settings.tsx",
     "project_state.json"
   ]
 }

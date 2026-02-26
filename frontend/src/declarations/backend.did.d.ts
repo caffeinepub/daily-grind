@@ -18,11 +18,6 @@ export type DayOfWeek = { 'tuesday' : null } |
   { 'friday' : null } |
   { 'monday' : null };
 export interface MotivationalMessage { 'id' : bigint, 'message' : string }
-export interface SetRow {
-  'id' : bigint,
-  'completed' : boolean,
-  'description' : string,
-}
 export interface Tier { 'name' : string, 'index' : bigint }
 export interface TierProgressionResult {
   'direction' : { 'up' : null } |
@@ -42,7 +37,6 @@ export type UserRole = { 'admin' : null } |
   { 'guest' : null };
 export interface WorkoutSchedule {
   'workoutDetails' : string,
-  'setRows' : Array<SetRow>,
   'owner' : Principal,
   'dayOfWeek' : DayOfWeek,
   'completed' : boolean,
@@ -119,10 +113,6 @@ export interface _SERVICE {
    * / profile directly.
    */
   'isNotificationsEnabled' : ActorMethod<[], boolean>,
-  /**
-   * / Update a specific set row as complete or incomplete. Only the owner may do this.
-   */
-  'markSetRowComplete' : ActorMethod<[string, bigint, boolean], undefined>,
   /**
    * / Mark a specific workout as complete or incomplete. Only the owner may do this.
    */

@@ -7,6 +7,7 @@ import Nat "mo:core/Nat";
 import Iter "mo:core/Iter";
 import Order "mo:core/Order";
 
+
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
@@ -23,19 +24,12 @@ actor {
     #sunday;
   };
 
-  public type SetRow = {
-    id : Nat;
-    description : Text;
-    completed : Bool;
-  };
-
   public type WorkoutSchedule = {
     dayOfWeek : DayOfWeek;
     workoutName : Text;
     workoutDetails : Text;
     timeReminder : ?Text;
     completed : Bool;
-    setRows : [SetRow];
     owner : Principal;
   };
 
@@ -148,7 +142,6 @@ actor {
       workoutDetails = schedule.workoutDetails;
       timeReminder = schedule.timeReminder;
       completed = schedule.completed;
-      setRows = schedule.setRows;
       owner = caller;
     };
     workoutSchedules.add(id, newSchedule);
@@ -179,34 +172,9 @@ actor {
           workoutDetails = entry.workoutDetails;
           timeReminder = entry.timeReminder;
           completed = completed;
-          setRows = entry.setRows;
           owner = entry.owner;
         };
         workoutSchedules.add(id, updatedEntry);
-      };
-    };
-  };
-
-  /// Update a specific set row as complete or incomplete. Only the owner may do this.
-  public shared ({ caller }) func markSetRowComplete(workoutId : Text, rowId : Nat, completed : Bool) : async () {
-    if (not callerHasUserRole(caller)) {
-      Runtime.trap("Unauthorized: Only users can mark workout sets as complete");
-    };
-    switch (workoutSchedules.get(workoutId)) {
-      case (null) { Runtime.trap("Workout not found") };
-      case (?workout) {
-        if (workout.owner != caller) {
-          Runtime.trap("Unauthorized: Only the owner can mark workout sets as complete");
-        };
-        let updatedRows = workout.setRows.map(
-          func(row) {
-            if (row.id == rowId) { { row with completed } } else { row };
-          }
-        );
-        let updatedWorkout : WorkoutSchedule = {
-          workout with setRows = updatedRows
-        };
-        workoutSchedules.add(workoutId, updatedWorkout);
       };
     };
   };

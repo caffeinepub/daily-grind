@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { WorkoutSchedule, UserProfile, SetRow, DayOfWeek } from '../backend';
+import { WorkoutSchedule, UserProfile } from '../backend';
 import { Principal } from '@dfinity/principal';
 
 // ── Workout Schedules ──────────────────────────────────────────────────────
@@ -15,6 +15,7 @@ export function useGetWorkoutSchedules() {
       return actor.getWorkoutSchedules();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 0,
   });
 }
 
@@ -26,20 +27,12 @@ export function useCreateOrUpdateWorkoutSchedule() {
     mutationFn: async ({ id, schedule }: { id: string; schedule: WorkoutSchedule }) => {
       if (!actor) throw new Error('Actor not available');
 
-      // Ensure setRows ids are bigint and all fields are correct
-      const normalizedSetRows: SetRow[] = (schedule.setRows ?? []).map((row, index) => ({
-        id: typeof row.id === 'bigint' ? row.id : BigInt(index),
-        description: row.description ?? '',
-        completed: row.completed ?? false,
-      }));
-
       const payload: WorkoutSchedule = {
         dayOfWeek: schedule.dayOfWeek,
         workoutName: schedule.workoutName,
         workoutDetails: schedule.workoutDetails,
         timeReminder: schedule.timeReminder,
         completed: schedule.completed ?? false,
-        setRows: normalizedSetRows,
         owner: Principal.anonymous(), // backend overwrites with caller
       };
 
@@ -59,29 +52,6 @@ export function useMarkWorkoutComplete() {
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
       if (!actor) throw new Error('Actor not available');
       await actor.markWorkoutComplete(id, completed);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
-    },
-  });
-}
-
-export function useMarkSetRowComplete() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      workoutId,
-      rowId,
-      completed,
-    }: {
-      workoutId: string;
-      rowId: bigint;
-      completed: boolean;
-    }) => {
-      if (!actor) throw new Error('Actor not available');
-      await actor.markSetRowComplete(workoutId, rowId, completed);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workoutSchedules'] });
